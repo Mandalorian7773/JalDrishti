@@ -4,7 +4,9 @@
 *.pyc
 __pycache__/
 local_settings.py
-# db.sqlite3
+db.sqlite3
+db.sqlite3-wal
+db.sqlite3-shm
 media/
 static/
 
@@ -28,3 +30,5 @@ Thumbs.db
 .coverage
 .tox/
 .eggs/
+# Downloaded India-WRIS extracts (regenerate with scripts/fetch_wris.py)
+data/*.jsonl

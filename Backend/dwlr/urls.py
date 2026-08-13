@@ -1,10 +1,11 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import WaterQualityRecordViewSet
+from django.urls import path
 
-router = DefaultRouter()
-router.register(r'water-quality', WaterQualityRecordViewSet, basename='waterqualityrecord')
+from . import views
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('summary/', views.summary),
+    path('stations/', views.stations),
+    path('stations/<str:code>/', views.station_detail),
+    path('states/', views.states),
+    path('alerts/', views.alerts),
 ]

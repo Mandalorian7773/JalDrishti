@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "myApp",
-    "slug": "myApp",
+    "name": "JalDrishti",
+    "slug": "jaldrishti",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "scheme": "jaldrishti",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -37,6 +37,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "description": "Real-time groundwater resource evaluation from CGWB DWLR telemetry"
   }
 }

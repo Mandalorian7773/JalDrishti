@@ -1,376 +1,331 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, ScrollView, View, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
-import { LineChart, BarChart } from 'react-native-chart-kit';
-import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Dimensions, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-// No need to import useColorScheme as we're using light mode only
+import {
+  Card,
+  CategoryPill,
+  Empty,
+  ErrorState,
+  Loading,
+  SectionTitle,
+  Stat,
+  TrendBadge,
+} from '@/components/Ui';
+import { ANOMALY_LABEL, Station, StationDetail, fmt, useApi } from '@/constants/api';
+import tw from '@/constants/tailwind';
 
-const API_URL = 'http://127.0.0.1:8000/api/water-quality/';
+const CHART_W = Dimensions.get('window').width - 40;
 
-interface WaterQualityData {
-  id: number;
-  date: string;
-  water_level_m: number;
-  temperature_c: number;
-  rainfall_mm: number;
-  ph: string;
-  dissolved_oxygen_mg_l: number;
+const chartConfig = {
+  backgroundGradientFrom: '#ffffff',
+  backgroundGradientTo: '#ffffff',
+  decimalPlaces: 1,
+  color: (o = 1) => `rgba(14,165,233,${o})`,
+  labelColor: (o = 1) => `rgba(100,116,139,${o})`,
+  propsForDots: { r: '0' },
+  propsForBackgroundLines: { stroke: '#f1f5f9' },
+};
+
+/** Charting 900 daily points is unreadable and slow — thin to `n` evenly spaced. */
+function thin<T>(rows: T[], n: number): T[] {
+  if (rows.length <= n) return rows;
+  const step = (rows.length - 1) / (n - 1);
+  return Array.from({ length: n }, (_, i) => rows[Math.round(i * step)]);
 }
 
 export default function AnalyticsScreen() {
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [waterData, setWaterData] = useState<WaterQualityData[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedMetric, setSelectedMetric] = useState<string>('water_level_m');
-  const colorScheme = 'light'; // Always use light mode
-  
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(API_URL);
-      setWaterData(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError('Failed to load data. Please check your connection.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-  
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchData();
-  };
-  
+  const params = useLocalSearchParams<{ code?: string }>();
+  const [query, setQuery] = useState('');
+  const [debounced, setDebounced] = useState('');
+  const [code, setCode] = useState<string | null>(params.code ?? null);
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (params.code) setCode(params.code);
+  }, [params.code]);
 
-  // Get recent data for charts
-  const recentData = waterData.slice(-30);
-  
-  // Prepare chart data based on selected metric
-  const getMetricData = (metric: string) => {
-    // Take every 4th data point to avoid overcrowding labels
-    const sampledData = recentData.filter((_, i) => i % 4 === 0);
-    
-    const colors: Record<string, (opacity: number) => string> = {
-      water_level_m: (opacity = 1) => `rgba(65, 105, 225, ${opacity})`, // Blue
-      temperature_c: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`, // Red
-      rainfall_mm: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`, // Light Blue
-      ph: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`, // Green
-      dissolved_oxygen_mg_l: (opacity = 1) => `rgba(155, 89, 182, ${opacity})`, // Purple
-    };
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 350);
+    return () => clearTimeout(t);
+  }, [query]);
 
-    const metricLabels: Record<string, string> = {
-      water_level_m: "Water Level (m)",
-      temperature_c: "Temperature (°C)",
-      rainfall_mm: "Rainfall (mm)",
-      ph: "pH Level",
-      dissolved_oxygen_mg_l: "Dissolved Oxygen (mg/L)",
-    };
-
-    return {
-      labels: sampledData.map(item => item.date.slice(5)), // Show only month-day
-      datasets: [
-        {
-          data: sampledData.map(item => 
-            metric === 'ph' ? parseFloat(item[metric]) : item[metric as keyof WaterQualityData] as number
-          ),
-          color: colors[metric] || ((opacity = 1) => `rgba(0, 0, 0, ${opacity})`),
-          strokeWidth: 2
-        }
-      ],
-      legend: [metricLabels[metric] || metric]
-    };
-  };
-
-  const chartConfig = {
-    backgroundGradientFrom: '#ffffff',
-    backgroundGradientTo: '#ffffff',
-    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    strokeWidth: 2,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false
-  };
-
-  const MetricButton = ({ title, metric }: { title: string; metric: string }) => (
-    <ThemedView 
-      style={[
-        styles.metricButton,
-        selectedMetric === metric && styles.selectedMetricButton
-      ]}
-      onTouchEnd={() => setSelectedMetric(metric)}
-    >
-      <ThemedText 
-        style={[
-          styles.metricButtonText,
-          selectedMetric === metric && styles.selectedMetricText
-        ]}
-      >
-        {title}
-      </ThemedText>
-    </ThemedView>
+  const list = useApi<{ count: number; results: Station[] }>(
+    `/stations/?limit=25${debounced ? `&q=${encodeURIComponent(debounced)}` : '&order=trend'}`
   );
+  const detail = useApi<StationDetail>(code ? `/stations/${code}/` : null);
 
-  // Calculate average, min, max for the selected metric
-  const getStats = (metric: string) => {
-    if (!recentData.length) return { avg: 0, min: 0, max: 0 };
-    
-    const values = recentData.map(item => 
-      metric === 'ph' ? parseFloat(item[metric]) : item[metric as keyof WaterQualityData] as number
+  // Default to the worst-declining station so the screen is never empty.
+  useEffect(() => {
+    if (!code && list.data?.results?.length) setCode(list.data.results[0].code);
+  }, [code, list.data]);
+
+  const chart = useMemo(() => {
+    const d = detail.data;
+    if (!d?.series?.length) return null;
+    // Observed only — padding this series to overlay the forecast would draw a
+    // flat tail that reads as real data. The projection gets its own row below.
+    const hist = thin(d.series, 40);
+    const labels = hist.map((p, i) =>
+      i % Math.ceil(hist.length / 5) === 0 ? p.date.slice(2, 7) : ''
     );
-    
     return {
-      avg: values.reduce((sum, val) => sum + val, 0) / values.length,
-      min: Math.min(...values),
-      max: Math.max(...values)
-    };
-  };
-
-  const stats = getStats(selectedMetric);
-
-  // Calculate monthly rainfall totals for bar chart
-  const getMonthlyRainfallData = () => {
-    const monthlyData: Record<string, number> = {};
-    
-    waterData.forEach(record => {
-      const month = record.date.slice(0, 7); // YYYY-MM format
-      if (!monthlyData[month]) {
-        monthlyData[month] = 0;
-      }
-      monthlyData[month] += record.rainfall_mm;
-    });
-    
-    // Get the last 6 months
-    const months = Object.keys(monthlyData).sort().slice(-6);
-    
-    return {
-      labels: months.map(m => m.slice(5)), // Just show MM
+      labels,
       datasets: [
-        {
-          data: months.map(m => monthlyData[m]),
-          color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-        }
+        { data: hist.map((p) => p.level_mbgl), color: (o = 1) => `rgba(14,165,233,${o})`, strokeWidth: 2 },
       ],
-      legend: ["Monthly Rainfall (mm)"]
     };
-  };
+  }, [detail.data]);
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <ThemedText style={styles.loadingText}>Loading data...</ThemedText>
-      </View>
-    );
-  }
+  const projection = useMemo(() => {
+    const fc = detail.data?.forecast ?? [];
+    if (!fc.length) return null;
+    const at = (days: number) => fc[Math.min(Math.round(days / 7) - 1, fc.length - 1)];
+    return { d30: at(30), d90: fc[fc.length - 1] };
+  }, [detail.data]);
+
+  const d = detail.data;
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor="#D0D0D0"
-      headerTitle="Analytics"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
-      
-      {error ? (
-        <ThemedView style={styles.errorContainer}>
-          <Ionicons name="warning" size={32} color="#E74C3C" />
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-        </ThemedView>
-      ) : (
-        <>
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Water Quality Analytics</ThemedText>
-          </ThemedView>
-          
-          <ThemedText style={styles.subtitle}>Parameter Trends (Last 30 Days)</ThemedText>
-          
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.metricsScrollContainer}>
-            <MetricButton title="Water Level" metric="water_level_m" />
-            <MetricButton title="Temperature" metric="temperature_c" />
-            <MetricButton title="Rainfall" metric="rainfall_mm" />
-            <MetricButton title="pH Level" metric="ph" />
-            <MetricButton title="Dissolved Oxygen" metric="dissolved_oxygen_mg_l" />
-          </ScrollView>
-          
-          <ThemedView style={styles.chartContainer}>
-            <LineChart
-              data={getMetricData(selectedMetric)}
-              width={Dimensions.get('window').width - 32}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={styles.chart}
-            />
-          </ThemedView>
-          
-          <ThemedView style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <ThemedText style={styles.statLabel}>Average</ThemedText>
-              <ThemedText style={styles.statValue}>{stats.avg.toFixed(2)}</ThemedText>
+    <SafeAreaView style={tw`flex-1 bg-slate-50`} edges={['top']}>
+      <ScrollView contentContainerStyle={tw`px-3 pb-28`} keyboardShouldPersistTaps="handled">
+        <View style={tw`pt-4 px-1`}>
+          <Text style={tw`text-2xl font-bold text-slate-900`}>Station analytics</Text>
+          <Text style={tw`text-sm text-slate-500 mt-0.5`}>
+            Water-level history, recharge and 90-day projection
+          </Text>
+        </View>
+
+        <View style={tw`flex-row items-center bg-white rounded-xl px-3 mt-4 border border-slate-200`}>
+          <Ionicons name="search" size={18} color="#94a3b8" />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search station, district or state"
+            placeholderTextColor="#94a3b8"
+            style={tw`flex-1 py-3 px-2 text-slate-900`}
+          />
+          {!!query && (
+            <Pressable onPress={() => setQuery('')}>
+              <Ionicons name="close-circle" size={18} color="#cbd5e1" />
+            </Pressable>
+          )}
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`mt-3 -mx-1`}>
+          {(list.data?.results ?? []).map((s) => (
+            <Pressable
+              key={s.code}
+              onPress={() => setCode(s.code)}
+              style={tw`mx-1 px-3 py-2 rounded-xl border ${
+                s.code === code ? 'bg-sky-600 border-sky-600' : 'bg-white border-slate-200'
+              }`}>
+              <Text
+                style={tw`text-xs font-semibold ${s.code === code ? 'text-white' : 'text-slate-700'}`}
+                numberOfLines={1}>
+                {s.name}
+              </Text>
+              <Text
+                style={tw`text-[10px] ${s.code === code ? 'text-sky-100' : 'text-slate-400'}`}
+                numberOfLines={1}>
+                {s.district}
+              </Text>
+            </Pressable>
+          ))}
+          {list.loading && <Text style={tw`text-xs text-slate-400 px-2 py-3`}>searching…</Text>}
+          {!list.loading && !list.data?.results?.length && (
+            <Text style={tw`text-xs text-slate-400 px-2 py-3`}>no station matches “{debounced}”</Text>
+          )}
+        </ScrollView>
+
+        {detail.error && <ErrorState message={detail.error} onRetry={detail.reload} />}
+        {detail.loading && !d && <Loading label="Loading station series…" />}
+
+        {d && (
+          <>
+            <Card style={tw`mt-4`}>
+              <View style={tw`flex-row items-start justify-between`}>
+                <View style={tw`flex-1 pr-2`}>
+                  <Text style={tw`text-lg font-bold text-slate-900`}>{d.name}</Text>
+                  <Text style={tw`text-xs text-slate-500 mt-0.5`}>
+                    {d.district}, {d.state} · {d.code}
+                  </Text>
+                  <Text style={tw`text-[11px] text-slate-400 mt-1`}>
+                    {d.well_type || 'Well'} · {fmt(d.well_depth_m, 0, ' m deep')} · aquifer{' '}
+                    {d.aquifer_type || 'n/a'} · {d.reading_count} daily records
+                  </Text>
+                </View>
+                <CategoryPill category={d.category} />
+              </View>
+              <View style={tw`flex-row items-center mt-3 pt-3 border-t border-slate-100`}>
+                <TrendBadge value={d.trend_m_per_year} />
+                <Text style={tw`text-xs text-slate-400 ml-auto`}>last reading {d.latest_date}</Text>
+              </View>
+            </Card>
+
+            <SectionTitle title="Water table over time" />
+            <Card style={tw`px-0 pt-4 pb-2`}>
+              {chart ? (
+                <>
+                  <LineChart
+                    data={chart as any}
+                    width={CHART_W}
+                    height={230}
+                    chartConfig={chartConfig}
+                    bezier
+                    withDots={false}
+                    fromZero={false}
+                    yAxisSuffix="m"
+                    style={{ marginLeft: -10 }}
+                  />
+                  <Text style={tw`text-[11px] text-slate-400 px-4`}>
+                    Depth below ground level — a rising line means the water table is getting
+                    deeper.
+                  </Text>
+                </>
+              ) : (
+                <Empty label="No series for this station" />
+              )}
+            </Card>
+
+            {projection && (
+              <Card style={tw`mt-3`}>
+                <Text style={tw`text-xs font-semibold text-slate-900 mb-3`}>
+                  Projected water table
+                </Text>
+                <View style={tw`flex-row`}>
+                  {(
+                    [
+                      ['Now', d.latest_level_mbgl],
+                      ['In 30 days', projection.d30?.level_mbgl],
+                      ['In 90 days', projection.d90?.level_mbgl],
+                    ] as [string, number | null | undefined][]
+                  ).map(([label, value], i) => {
+                    const delta = (value ?? 0) - (d.latest_level_mbgl ?? 0);
+                    return (
+                      <View key={label} style={tw`flex-1`}>
+                        <Text style={tw`text-[11px] text-slate-500`}>{label}</Text>
+                        <Text style={tw`text-lg font-bold text-slate-900`}>{fmt(value, 2)}</Text>
+                        <Text style={tw`text-[10px] text-slate-400`}>
+                          m bgl
+                          {i > 0 &&
+                            ` · ${delta > 0 ? '+' : ''}${delta.toFixed(2)} ${
+                              delta > 0 ? 'deeper' : 'shallower'
+                            }`}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                <Text style={tw`text-[11px] text-slate-400 mt-3`}>
+                  {projection.d90?.seasonal
+                    ? "Linear trend plus annual monsoon cycle fitted to this station's own record."
+                    : 'Trend only — under two years of record, so no monsoon cycle is fitted yet.'}
+                </Text>
+              </Card>
+            )}
+
+            <SectionTitle title="Resource evaluation" />
+            <View style={tw`flex-row flex-wrap -mx-1`}>
+              <Stat
+                label="Pre-monsoon (Apr–May)"
+                value={fmt(d.pre_monsoon_mbgl, 2)}
+                unit="m bgl"
+                icon="sunny"
+                tint="#f59e0b"
+              />
+              <Stat
+                label="Post-monsoon (Oct–Nov)"
+                value={fmt(d.post_monsoon_mbgl, 2)}
+                unit="m bgl"
+                icon="rainy"
+                tint="#0ea5e9"
+              />
+              <Stat
+                label="Seasonal rise"
+                value={fmt(d.seasonal_fluctuation_m, 2)}
+                unit="m"
+                icon="swap-vertical"
+                tint="#0891b2"
+              />
+              <Stat
+                label="Recharge"
+                value={fmt(d.recharge_mm, 0)}
+                unit="mm"
+                icon="water"
+                tint="#6366f1"
+                hint={`Sy = ${d.specific_yield ?? '—'}`}
+              />
+              <Stat
+                label="Shallowest"
+                value={fmt(d.min_level_mbgl, 2)}
+                unit="m bgl"
+                icon="arrow-up-circle"
+                tint="#16a34a"
+              />
+              <Stat
+                label="Deepest"
+                value={fmt(d.max_level_mbgl, 2)}
+                unit="m bgl"
+                icon="arrow-down-circle"
+                tint="#dc2626"
+              />
             </View>
-            <View style={styles.statItem}>
-              <ThemedText style={styles.statLabel}>Minimum</ThemedText>
-              <ThemedText style={styles.statValue}>{stats.min.toFixed(2)}</ThemedText>
-            </View>
-            <View style={styles.statItem}>
-              <ThemedText style={styles.statLabel}>Maximum</ThemedText>
-              <ThemedText style={styles.statValue}>{stats.max.toFixed(2)}</ThemedText>
-            </View>
-          </ThemedView>
-          
-          <ThemedText style={styles.subtitle}>Monthly Rainfall</ThemedText>
-          
-          <ThemedView style={styles.chartContainer}>
-            <BarChart
-              data={getMonthlyRainfallData()}
-              width={Dimensions.get('window').width - 32}
-              height={220}
-              yAxisLabel=""
-              yAxisSuffix="mm"
-              chartConfig={chartConfig}
-              style={styles.chart}
-            />
-          </ThemedView>
-          
-          <ThemedText style={styles.subtitle}>Insights</ThemedText>
-          
-          <ThemedView style={styles.insightCard}>
-            <View style={styles.insightIconContainer}>
-              <Ionicons name="analytics" size={24} color="#3498DB" />
-            </View>
-            <ThemedText style={styles.insightText}>
-              The analytics shows a correlation between rainfall patterns and groundwater levels.
-              Monitoring these trends helps in sustainable water resource management.
-            </ThemedText>
-          </ThemedView>
-          
-          <ThemedView style={styles.insightCard}>
-            <View style={styles.insightIconContainer}>
-              <Ionicons name="flask" size={24} color="#9B59B6" />
-            </View>
-            <ThemedText style={styles.insightText}>
-              Water quality parameters like pH and dissolved oxygen provide insights into the health
-              of groundwater resources and potential contamination issues.
-            </ThemedText>
-          </ThemedView>
-        </>
-      )}
-    </ParallaxScrollView>
+
+            <Card style={tw`mt-3`}>
+              <Text style={tw`text-xs text-slate-600 leading-5`}>
+                <Text style={tw`font-semibold`}>How recharge is computed. </Text>
+                Water Table Fluctuation method (GEC-2015): recharge ={' '}
+                {fmt(d.seasonal_fluctuation_m, 2)} m rise × specific yield {d.specific_yield} × 1000
+                = {fmt(d.recharge_mm, 0)} mm over the monsoon season.
+              </Text>
+            </Card>
+
+            <SectionTitle title="Sensor health" />
+            <Card>
+              <View style={tw`flex-row items-center`}>
+                <Text style={tw`text-3xl font-bold text-slate-900`}>{fmt(d.data_quality, 0)}</Text>
+                <Text style={tw`text-slate-400 ml-1 mt-2`}>/100</Text>
+                <View style={tw`flex-1 ml-4`}>
+                  <View style={tw`h-2 bg-slate-100 rounded-full overflow-hidden`}>
+                    <View
+                      style={[
+                        tw`h-2 rounded-full`,
+                        {
+                          width: `${d.data_quality ?? 0}%`,
+                          backgroundColor:
+                            (d.data_quality ?? 0) > 75
+                              ? '#16a34a'
+                              : (d.data_quality ?? 0) > 50
+                                ? '#eab308'
+                                : '#dc2626',
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              </View>
+              {d.anomalies?.length ? (
+                d.anomalies.map((a) => (
+                  <View key={a} style={tw`flex-row items-center mt-2`}>
+                    <Ionicons name="alert-circle" size={15} color="#f97316" />
+                    <Text style={tw`text-xs text-slate-700 ml-2`}>{ANOMALY_LABEL[a] ?? a}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={tw`flex-row items-center mt-2`}>
+                  <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
+                  <Text style={tw`text-xs text-slate-700 ml-2`}>
+                    Transmitting cleanly, no anomalies detected
+                  </Text>
+                </View>
+              )}
+            </Card>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-  },
-  errorContainer: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  errorText: {
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  titleContainer: {
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 24,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  metricsScrollContainer: {
-    paddingHorizontal: 8,
-    marginBottom: 16,
-  },
-  metricButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginHorizontal: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  selectedMetricButton: {
-    backgroundColor: '#3498DB',
-  },
-  metricButtonText: {
-    fontSize: 14,
-  },
-  selectedMetricText: {
-    color: '#FFFFFF',
-  },
-  chartContainer: {
-    borderRadius: 12,
-    padding: 8,
-    marginHorizontal: 16,
-    alignItems: 'center',
-  },
-  chart: {
-    borderRadius: 8,
-    padding: 8,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 16,
-    marginHorizontal: 16,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  insightCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  insightIconContainer: {
-    marginRight: 12,
-  },
-  insightText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});

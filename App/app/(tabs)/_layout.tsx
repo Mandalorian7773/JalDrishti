@@ -1,59 +1,35 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
-import { HapticTab } from '@/components/HapticTab';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-// No need to import useColorScheme as we're using light mode only
+const TABS = [
+  { name: 'index', title: 'Dashboard', icon: 'water' },
+  { name: 'analytics', title: 'Analytics', icon: 'analytics' },
+  { name: 'map', title: 'Map', icon: 'map' },
+  { name: 'alerts', title: 'Alerts', icon: 'warning' },
+  { name: 'states', title: 'States', icon: 'podium' },
+] as const;
 
 export default function TabLayout() {
-  const colorScheme = 'light'; // Always use light mode
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        tabBarActiveTintColor: '#0284c7',
+        tabBarInactiveTintColor: '#94a3b8',
+        tabBarStyle: { backgroundColor: '#ffffff', borderTopColor: '#e2e8f0' },
+        tabBarLabelStyle: { fontSize: 11 },
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color }) => <Ionicons name="water" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          title: 'Analytics',
-          tabBarIcon: ({ color }) => <Ionicons name="analytics" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: 'Map',
-          tabBarIcon: ({ color }) => <Ionicons name="map" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons name="settings" size={24} color={color} />,
-        }}
-      />
+      {TABS.map((t) => (
+        <Tabs.Screen
+          key={t.name}
+          name={t.name}
+          options={{
+            title: t.title,
+            tabBarIcon: ({ color }) => <Ionicons name={t.icon} size={22} color={color} />,
+          }}
+        />
+      ))}
     </Tabs>
   );
 }
