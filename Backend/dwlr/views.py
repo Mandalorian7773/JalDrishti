@@ -1,8 +1,10 @@
 from datetime import timedelta
 
-from django.db.models import Avg, Count, Max, Q
+from django.db.models import Avg, Count, ExpressionWrapper, F, FloatField, Max, Q
 from django.db.models.functions import TruncMonth
-from django.views.decorators.cache import cache_page
+from functools import wraps
+
+from django.core.cache import cache
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -15,6 +17,29 @@ LIST_FIELDS = (
     "seasonal_fluctuation_m", "recharge_mm", "data_quality", "anomalies",
 )
 CATEGORIES = ("safe", "semi_critical", "critical", "over_exploited", "unknown")
+
+
+def server_cache(seconds):
+    """Cache the response body on the server only.
+
+    Django's cache_page also sends Cache-Control: max-age, which makes the
+    browser hold a stale copy for the same window - pull-to-refresh stops
+    working and a schema change looks like a broken chart until it expires.
+    """
+
+    def decorate(view):
+        @wraps(view)
+        def wrapper(request, *args, **kwargs):
+            key = f"{view.__name__}:{request.get_full_path()}"
+            payload = cache.get(key)
+            if payload is None:
+                payload = view(request, *args, **kwargs).data
+                cache.set(key, payload, seconds)
+            return Response(payload)
+
+        return wrapper
+
+    return decorate
 
 
 def _clean(qs):
@@ -49,7 +74,7 @@ def _filtered(request):
 
 
 @api_view(["GET"])
-@cache_page(60)
+@server_cache(60)
 def stations(request):
     qs = _filtered(request)
     order = request.query_params.get("order")
@@ -107,7 +132,7 @@ def station_detail(request, code):
 
 
 @api_view(["GET"])
-@cache_page(60)
+@server_cache(60)
 def summary(request):
     qs = _filtered(request)
     clean = _clean(qs)
@@ -152,7 +177,46 @@ def summary(request):
 
 
 @api_view(["GET"])
-@cache_page(60)
+@server_cache(900)  # scans every reading; only changes when `analyze` reruns
+def trend(request):
+    """Monthly national water-table anomaly, for the dashboard chart.
+
+    Averaging raw depths month by month measures which stations happened to
+    report, not the water table: coverage swings between ~1000 and ~1600
+    recorders and shallow regions dropping out look identical to a national
+    recovery. Averaging each reading's deviation from its own station's mean
+    cancels that out, so the curve only moves when water levels move.
+    """
+    qs = _clean(_filtered(request)).filter(mean_level_mbgl__isnull=False)
+    rows = (
+        Reading.objects.filter(station__in=qs)
+        .annotate(
+            m=TruncMonth("date"),
+            dev=ExpressionWrapper(
+                F("level_mbgl") - F("station__mean_level_mbgl"), output_field=FloatField()
+            ),
+        )
+        .values("m")
+        .annotate(
+            anomaly=Avg("dev"), level=Avg("level_mbgl"), stations=Count("station", distinct=True)
+        )
+        .order_by("m")
+    )
+    return Response(
+        [
+            {
+                "month": r["m"].isoformat(),
+                "anomaly_m": round(r["anomaly"], 3),
+                "level_mbgl": round(r["level"], 3),
+                "stations": r["stations"],
+            }
+            for r in rows
+        ]
+    )
+
+
+@api_view(["GET"])
+@server_cache(60)
 def states(request):
     rows = (
         _clean(Station.objects.all()).values("state")
@@ -174,7 +238,7 @@ def states(request):
 
 
 @api_view(["GET"])
-@cache_page(60)
+@server_cache(60)
 def alerts(request):
     """Stations needing attention: fast depletion, or a sensor reporting nonsense."""
     qs = _filtered(request)

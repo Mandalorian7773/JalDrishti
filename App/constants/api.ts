@@ -29,7 +29,9 @@ export const API_BASE = resolveBase();
 export const API = `${API_BASE}/api`;
 
 export async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(`${API}${path}`, { signal });
+  // no-store: this is a live monitoring feed. Without it the browser can serve
+  // its own cached copy and pull-to-refresh silently does nothing.
+  const res = await fetch(`${API}${path}`, { signal, cache: 'no-store' });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   return res.json();
 }
