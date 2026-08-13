@@ -1,0 +1,30 @@
+# Django-specific files
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+# db.sqlite3
+media/
+static/
+
+# Virtual Environment
+.env
+venv/
+.venv/
+env/
+
+# IDE and Editor-specific files
+.idea/
+.vscode/
+*.swp
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Other common files
+.coverage
+.tox/
+.eggs/
