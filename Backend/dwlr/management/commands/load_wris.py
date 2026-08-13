@@ -38,20 +38,33 @@ class Command(BaseCommand):
         text_fields = ["name", "state", "district", "tehsil", "block", "agency",
                        "well_type", "aquifer_type", "status"]
         num_fields = ["latitude", "longitude", "well_depth_m"]
-        seen, created, rejected = {}, 0, 0
+        # One upsert for the whole file, not update_or_create per station. Against
+        # a local SQLite file the difference is cosmetic; against a hosted
+        # Postgres it is 6500 sequential round trips versus a handful - half an
+        # hour of latency for work that takes seconds.
+        rows, rejected = [], 0
+        for line in stations_file.open():
+            r = json.loads(line)
+            if not _in_india(r.get("latitude"), r.get("longitude")):
+                rejected += 1
+                continue
+            values = {k: (r.get(k) or "") for k in text_fields}
+            values.update({k: r.get(k) for k in num_fields})
+            rows.append(Station(code=r["code"], **values))
+
+        before = Station.objects.count()
         with transaction.atomic():
-            for line in stations_file.open():
-                r = json.loads(line)
-                if not _in_india(r.get("latitude"), r.get("longitude")):
-                    rejected += 1
-                    continue
-                defaults = {k: (r.get(k) or "") for k in text_fields}
-                defaults.update({k: r.get(k) for k in num_fields})
-                obj, is_new = Station.objects.update_or_create(code=r["code"], defaults=defaults)
-                seen[r["code"]] = obj.id
-                created += is_new
+            Station.objects.bulk_create(
+                rows,
+                batch_size=1000,
+                update_conflicts=True,
+                unique_fields=["code"],
+                update_fields=text_fields + num_fields,
+            )
+        seen = dict(Station.objects.values_list("code", "id"))
         self.stdout.write(
-            f"stations: {len(seen)} ({created} new, {rejected} rejected on coordinates)"
+            f"stations: {len(rows)} upserted ({Station.objects.count() - before} new, "
+            f"{rejected} rejected on coordinates)"
         )
         if not readings_file.exists():
             return
