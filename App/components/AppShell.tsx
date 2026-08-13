@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 
 import tw from '@/constants/tailwind';
@@ -28,7 +28,14 @@ export const BREAKPOINT = 900;
 
 export function useWideLayout() {
   const { width } = useWindowDimensions();
-  return width >= BREAKPOINT;
+  // `expo export --platform web` prerenders these screens at build time, where
+  // there is no window to measure. Branching on width during the first render
+  // makes the client disagree with that HTML and React throws a hydration
+  // error (#418), discarding the tree. Stay narrow until after mount so the
+  // first paint always matches, then switch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted && width >= BREAKPOINT;
 }
 
 const NavItem = ({
