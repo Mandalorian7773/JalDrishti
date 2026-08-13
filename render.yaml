@@ -1,0 +1,41 @@
+databases:
+  - name: jaldrishti-db
+    databaseName: jaldrishti
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: jaldrishti-api
+    runtime: python
+    plan: free
+    rootDir: Backend
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput
+    # 2 workers is the ceiling for the free tier's 512 MB; the trend query is
+    # the memory-hungry one. --timeout 120 covers its cold, uncached run.
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    healthCheckPath: /api/summary/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jaldrishti-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_HTTPS
+        value: "true"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: jaldrishti-api.onrender.com
+      # Set to the Vercel origin once the frontend is deployed. Leaving this
+      # blank falls back to allowing every origin.
+      - key: DJANGO_CORS_ORIGINS
+        sync: false
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://jaldrishti-api.onrender.com
