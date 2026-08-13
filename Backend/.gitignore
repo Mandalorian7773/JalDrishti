@@ -32,3 +32,6 @@ Thumbs.db
 .eggs/
 # Downloaded India-WRIS extracts (regenerate with scripts/fetch_wris.py)
 data/*.jsonl
+
+# collectstatic output
+staticfiles/
