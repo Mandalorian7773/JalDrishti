@@ -308,4 +308,6 @@ def chat_view(request):
         reply = chat(messages)
         return Response({"reply": reply})
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        import traceback
+        traceback.print_exc()
+        return Response({"error": f"{type(e).__name__}: {str(e)}"}, status=500)
