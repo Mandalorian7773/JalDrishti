@@ -4,7 +4,7 @@ import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useWideLayout } from '@/components/AppShell';
-import { AlertTriangle, Cpu, Droplets, List } from '@/components/Icons';
+import { AlertTriangle, ChevronLeft, ChevronRight, Cpu, Droplets, List } from '@/components/Icons';
 import {
   AnomalyBadge,
   Card,
@@ -20,6 +20,7 @@ import { Station, fmt, useApi } from '@/constants/api';
 import tw from '@/constants/tailwind';
 
 type Tab = 'depletion' | 'sensor';
+const PAGE_SIZE = 10;
 
 const AlertRow = ({ s, kind }: { s: Station; kind: Tab }) => (
   <Pressable
@@ -43,11 +44,11 @@ const AlertRow = ({ s, kind }: { s: Station; kind: Tab }) => (
       {kind === 'depletion' ? (
         <CategoryPill category={s.category} small />
       ) : (
-        <View style={tw`bg-purple-50 border border-purple-200/80 rounded-lg px-2.5 py-1 items-end`}>
-          <Text style={tw`text-xs font-semibold text-purple-700`}>
+        <View style={tw`bg-blue-50 border border-blue-200/80 rounded-lg px-2.5 py-1 items-end`}>
+          <Text style={tw`text-xs font-semibold text-blue-700`}>
             {fmt(s.data_quality, 0)}/100
           </Text>
-          <Text style={tw`text-[9px] font-medium text-purple-500`}>QA Health</Text>
+          <Text style={tw`text-[9px] font-medium text-blue-500`}>QA Health</Text>
         </View>
       )}
     </View>
@@ -85,6 +86,7 @@ const AlertRow = ({ s, kind }: { s: Station; kind: Tab }) => (
 export default function AlertsScreen() {
   const wide = useWideLayout();
   const [tab, setTab] = useState<Tab>('depletion');
+  const [page, setPage] = useState(1);
   const { data, error, loading, reload } = useApi<Record<Tab, Station[]>>('/alerts/');
 
   if (loading && !data) return <Loading label="Scanning early warning alerts & sensor diagnostics…" />;
@@ -99,6 +101,13 @@ export default function AlertsScreen() {
   const depletionCount = data?.depletion?.length ?? 0;
   const sensorCount = data?.sensor?.length ?? 0;
 
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const from = total === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(safePage * PAGE_SIZE, total);
+
   return (
     <SafeAreaView style={tw`flex-1 bg-slate-50/50`} edges={wide ? [] : ['top']}>
       <ScrollView
@@ -107,7 +116,7 @@ export default function AlertsScreen() {
         {/* Mobile Header */}
         {!wide && (
           <View style={tw`pt-1 pb-1`}>
-            <Text style={tw`text-[10px] font-semibold text-sky-600 uppercase tracking-widest`}>
+            <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
               DECISION SUPPORT
             </Text>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
@@ -137,7 +146,7 @@ export default function AlertsScreen() {
               label: 'Sensor Telemetry Faults',
               count: sensorCount,
               icon: Cpu,
-              color: '#8b5cf6',
+              color: '#2563eb',
             },
           ].map((t) => {
             const active = tab === t.key;
@@ -145,7 +154,10 @@ export default function AlertsScreen() {
             return (
               <Pressable
                 key={t.key}
-                onPress={() => setTab(t.key as Tab)}
+                onPress={() => {
+                  setTab(t.key as Tab);
+                  setPage(1);
+                }}
                 style={[
                   tw`flex-1 flex-row items-center justify-center py-2.5 rounded-xl transition-all shadow-2xs`,
                   active ? tw`bg-white` : tw`bg-transparent`,
@@ -173,12 +185,12 @@ export default function AlertsScreen() {
           <View
             style={[
               tw`w-8 h-8 rounded-xl items-center justify-center mr-3`,
-              tab === 'depletion' ? tw`bg-rose-50 border border-rose-100` : tw`bg-purple-50 border border-purple-100`,
+              tab === 'depletion' ? tw`bg-rose-50 border border-rose-100` : tw`bg-blue-50 border border-blue-100`,
             ]}>
             {tab === 'depletion' ? (
               <Droplets size={16} color="#dc2626" strokeWidth={2} />
             ) : (
-              <Cpu size={16} color="#8b5cf6" strokeWidth={2} />
+              <Cpu size={16} color="#2563eb" strokeWidth={2} />
             )}
           </View>
           <View style={tw`flex-1`}>
@@ -195,17 +207,67 @@ export default function AlertsScreen() {
           </View>
         </Card>
 
-        {/* Alert List */}
+        {/* Alert List Header */}
         <SectionTitle
           title={tab === 'depletion' ? `Flagged Depletion Zones (${rows.length})` : `Faulty Recorders (${rows.length})`}
           subtitle={tab === 'depletion' ? 'Sorted by annual rate of water table loss' : 'Sorted by lowest telemetry health score'}
           icon={List}
         />
-        <Card style={tw`py-1`}>
-          {rows.length ? (
-            rows.map((s) => <AlertRow key={s.code} s={s} kind={tab} />)
-          ) : (
-            <Empty label="No active anomalies flagged in this category" />
+
+        {/* Paginated Alert List Card */}
+        <Card style={tw`p-0 overflow-hidden`}>
+          <View style={tw`py-1`}>
+            {paginatedRows.length ? (
+              paginatedRows.map((s) => <AlertRow key={s.code} s={s} kind={tab} />)
+            ) : (
+              <Empty label="No active anomalies flagged in this category" />
+            )}
+          </View>
+
+          {/* Pagination Toolbar */}
+          {totalPages > 1 && (
+            <View style={tw`flex-row items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/70`}>
+              <Text style={tw`text-xs text-slate-500 font-medium`}>
+                Showing <Text style={tw`font-semibold text-slate-800`}>{from}–{to}</Text> of <Text style={tw`font-semibold text-slate-800`}>{total}</Text>
+              </Text>
+
+              <View style={tw`flex-row items-center`}>
+                {/* Prev Button */}
+                <Pressable
+                  onPress={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  style={[
+                    tw`flex-row items-center px-2.5 py-1.5 rounded-lg border mr-2 transition-all`,
+                    safePage === 1
+                      ? tw`bg-slate-100 border-slate-200 opacity-40`
+                      : tw`bg-white border-slate-200 hover:bg-slate-100 shadow-2xs`,
+                  ]}>
+                  <ChevronLeft size={13} color="#475569" strokeWidth={2} />
+                  <Text style={tw`text-xs font-semibold text-slate-700 ml-1`}>Prev</Text>
+                </Pressable>
+
+                {/* Page Indicator */}
+                <View style={tw`px-2.5 py-1 bg-white border border-slate-200 rounded-lg shadow-2xs mr-2`}>
+                  <Text style={tw`text-xs font-medium text-slate-600`}>
+                    <Text style={tw`font-bold text-blue-600`}>{safePage}</Text> / {totalPages}
+                  </Text>
+                </View>
+
+                {/* Next Button */}
+                <Pressable
+                  onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  style={[
+                    tw`flex-row items-center px-2.5 py-1.5 rounded-lg border transition-all`,
+                    safePage === totalPages
+                      ? tw`bg-slate-100 border-slate-200 opacity-40`
+                      : tw`bg-white border-slate-200 hover:bg-slate-100 shadow-2xs`,
+                  ]}>
+                  <Text style={tw`text-xs font-semibold text-slate-700 mr-1`}>Next</Text>
+                  <ChevronRight size={13} color="#475569" strokeWidth={2} />
+                </Pressable>
+              </View>
+            </View>
           )}
         </Card>
       </ScrollView>

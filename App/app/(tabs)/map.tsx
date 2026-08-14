@@ -1,16 +1,16 @@
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useWideLayout } from '@/components/AppShell';
-import { ArrowRight, Grid, Radio } from '@/components/Icons';
+import { ArrowRight, ChevronDown, Grid, MapPin, Radio, Search, X } from '@/components/Icons';
 import StationMap from '@/components/StationMap';
 import { Card, CategoryPill, ErrorState, Loading, PulseBadge, TrendBadge } from '@/components/Ui';
 import { CATEGORY_META, Category, Station, fmt, useApi } from '@/constants/api';
 import tw from '@/constants/tailwind';
 
-const FILTERS: { key: Category | 'all'; label: string; countKey?: string }[] = [
+const FILTERS: { key: Category | 'all'; label: string }[] = [
   { key: 'all', label: 'All Recorders' },
   { key: 'over_exploited', label: 'Over-Exploited' },
   { key: 'critical', label: 'Critical' },
@@ -24,13 +24,34 @@ export default function MapScreen() {
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [state, setState] = useState<string | null>(null);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
+  const [stateSearch, setStateSearch] = useState('');
 
   const { data, error, loading, reload } = useApi<{ count: number; results: Station[] }>(
     '/stations/?limit=6000'
   );
 
   const all = useMemo(() => data?.results ?? [], [data]);
-  const states = useMemo(() => Array.from(new Set(all.map((s) => s.state))).sort(), [all]);
+
+  const stateCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    all.forEach((s) => {
+      if (s.state) {
+        map.set(s.state, (map.get(s.state) ?? 0) + 1);
+      }
+    });
+    return map;
+  }, [all]);
+
+  const states = useMemo(() => Array.from(stateCounts.keys()).sort(), [stateCounts]);
+
+  const filteredStates = useMemo(() => {
+    if (!stateSearch.trim()) return states;
+    const q = stateSearch.toLowerCase();
+    return states.filter((st) => st.toLowerCase().includes(q));
+  }, [states, stateSearch]);
+
   const shown = useMemo(
     () =>
       all.filter(
@@ -52,154 +73,350 @@ export default function MapScreen() {
       </SafeAreaView>
     );
 
+  const currentFilterMeta = FILTERS.find((f) => f.key === category) ?? FILTERS[0];
+  const currentCategoryCount =
+    category === 'all'
+      ? all.length
+      : all.filter((s) => s.category === category).length;
+  const currentCategoryColor =
+    category === 'all'
+      ? '#2563eb'
+      : CATEGORY_META[category as Category]?.color ?? '#2563eb';
+
   return (
     <SafeAreaView style={tw`flex-1 bg-slate-50/50`} edges={wide ? [] : ['top']}>
-      {/* Mobile Title (Wide screen already handled in AppShell) */}
+      {/* Mobile Header */}
       {!wide && (
-        <View style={tw`px-4 pt-3 pb-1`}>
-          <Text style={tw`text-[10px] font-semibold text-sky-600 uppercase tracking-widest`}>
+        <View style={tw`px-4 pt-2.5 pb-1`}>
+          <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
             SPATIAL INTELLIGENCE
           </Text>
           <View style={tw`flex-row items-center justify-between mt-0.5`}>
-            <Text style={tw`text-xl font-bold text-slate-900 tracking-tight`}>
+            <Text style={tw`text-lg font-bold text-slate-900 tracking-tight`}>
               Live Operations Map
             </Text>
             <PulseBadge label={`${shown.length} Active`} />
           </View>
-          <Text style={tw`text-xs text-slate-500 mt-1 font-normal`}>
-            Switch between Live Station Map or Aquifer Area Map.
-          </Text>
         </View>
       )}
 
-      {/* Mode View Switcher (Live Station Map vs Live Area Map) */}
-      <View style={tw`flex-row items-center px-4 pt-2.5 pb-1`}>
-        <Pressable
-          onPress={() => setMode('stations')}
-          style={[
-            tw`flex-row items-center px-3.5 py-1.5 rounded-xl mr-2.5 border shadow-2xs transition-all`,
-            mode === 'stations'
-              ? tw`bg-sky-50 border-sky-300 text-sky-700`
-              : tw`bg-white border-slate-200 text-slate-600`,
-          ]}>
-          <Radio
-            size={13}
-            color={mode === 'stations' ? '#0284c7' : '#64748b'}
-            strokeWidth={2}
-            style={tw`mr-1.5`}
-          />
-          <Text
+      {/* Unified Compact Single Row Toolbar (Strictly 1 Row) */}
+      <View style={tw`px-4 py-2 z-30 flex-row items-center border-b border-slate-200/80 bg-white/95`}>
+        {/* Left: Mode Switcher */}
+        <View style={tw`flex-row items-center bg-slate-100/90 rounded-xl p-0.5 border border-slate-200/80 mr-3 flex-shrink-0`}>
+          <Pressable
+            onPress={() => setMode('stations')}
             style={[
-              tw`text-xs font-semibold tracking-tight`,
-              mode === 'stations' ? tw`text-sky-700` : tw`text-slate-600`,
+              tw`flex-row items-center px-3 py-1.5 rounded-lg transition-all`,
+              mode === 'stations'
+                ? tw`bg-white border border-slate-200 shadow-2xs`
+                : tw`bg-transparent`,
             ]}>
-            Live Station Map
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setMode('area')}
-          style={[
-            tw`flex-row items-center px-3.5 py-1.5 rounded-xl border shadow-2xs transition-all`,
-            mode === 'area'
-              ? tw`bg-sky-50 border-sky-300 text-sky-700`
-              : tw`bg-white border-slate-200 text-slate-600`,
-          ]}>
-          <Grid
-            size={13}
-            color={mode === 'area' ? '#0284c7' : '#64748b'}
-            strokeWidth={2}
-            style={tw`mr-1.5`}
-          />
-          <Text
-            style={[
-              tw`text-xs font-semibold tracking-tight`,
-              mode === 'area' ? tw`text-sky-700` : tw`text-slate-600`,
-            ]}>
-            Live Area Map
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* Category Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={tw`px-4 py-1.5`}
-        style={tw`max-h-12`}>
-        {FILTERS.map((f) => {
-          const active = category === f.key;
-          const color = f.key === 'all' ? '#0284c7' : CATEGORY_META[f.key as Category].color;
-          const count =
-            f.key === 'all'
-              ? all.length
-              : all.filter((s) => s.category === f.key).length;
-
-          return (
-            <Pressable
-              key={f.key}
-              onPress={() => setCategory(f.key)}
+            <Radio
+              size={12}
+              color={mode === 'stations' ? '#2563eb' : '#64748b'}
+              strokeWidth={2}
+              style={tw`mr-1.5`}
+            />
+            <Text
               style={[
-                tw`flex-row items-center px-3 py-1 mr-2 rounded-full border shadow-2xs`,
-                active
-                  ? { backgroundColor: color, borderColor: color }
-                  : tw`bg-white border-slate-200`,
+                tw`text-xs font-semibold`,
+                mode === 'stations' ? tw`text-blue-700` : tw`text-slate-600`,
               ]}>
+              Station Map
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setMode('area')}
+            style={[
+              tw`flex-row items-center px-3 py-1.5 rounded-lg transition-all`,
+              mode === 'area'
+                ? tw`bg-white border border-slate-200 shadow-2xs`
+                : tw`bg-transparent`,
+            ]}>
+            <Grid
+              size={12}
+              color={mode === 'area' ? '#2563eb' : '#64748b'}
+              strokeWidth={2}
+              style={tw`mr-1.5`}
+            />
+            <Text
+              style={[
+                tw`text-xs font-semibold`,
+                mode === 'area' ? tw`text-blue-700` : tw`text-slate-600`,
+              ]}>
+              Area Map
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Center: Category / Vulnerability Dropdown */}
+        <View style={tw`relative z-40 mr-3 flex-shrink-0`}>
+          <Pressable
+            onPress={() => setCategoryDropdownOpen((prev) => !prev)}
+            style={[
+              tw`flex-row items-center justify-between px-3 py-1.5 bg-white border rounded-xl shadow-2xs min-w-[185px]`,
+              category !== 'all' ? tw`border-blue-400 bg-blue-50/50` : tw`border-slate-200`,
+            ]}>
+            <View style={tw`flex-row items-center flex-1 mr-2`}>
               <View
                 style={[
-                  tw`w-2 h-2 rounded-full mr-1.5`,
-                  { backgroundColor: active ? '#ffffff' : color },
+                  tw`w-2 h-2 rounded-full mr-2 flex-shrink-0`,
+                  { backgroundColor: currentCategoryColor },
                 ]}
               />
               <Text
                 style={[
-                  tw`text-xs font-medium`,
-                  active ? tw`text-white font-semibold` : tw`text-slate-700`,
-                ]}>
-                {f.label} ({count})
+                  tw`text-xs font-semibold`,
+                  category !== 'all' ? tw`text-blue-800` : tw`text-slate-700`,
+                ]}
+                numberOfLines={1}>
+                {currentFilterMeta.label} ({currentCategoryCount})
               </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      {/* State Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={tw`px-4 py-1`}
-        style={tw`max-h-10`}>
-        <Pressable
-          onPress={() => setState(null)}
-          style={[
-            tw`px-3 py-1 mr-2 rounded-lg border justify-center`,
-            !state
-              ? tw`bg-slate-900 border-slate-900 shadow-2xs`
-              : tw`bg-white border-slate-200`,
-          ]}>
-          <Text style={[tw`text-xs font-medium`, !state ? tw`text-white font-semibold` : tw`text-slate-700`]}>
-            All States ({states.length})
-          </Text>
-        </Pressable>
-        {states.map((st) => (
-          <Pressable
-            key={st}
-            onPress={() => setState(st === state ? null : st)}
-            style={[
-              tw`px-3 py-1 mr-2 rounded-lg border justify-center`,
-              st === state
-                ? tw`bg-slate-900 border-slate-900 shadow-2xs`
-                : tw`bg-white border-slate-200`,
-            ]}>
-            <Text style={[tw`text-xs font-medium`, st === state ? tw`text-white font-semibold` : tw`text-slate-700`]}>
-              {st}
-            </Text>
+            </View>
+            <ChevronDown size={13} color={category !== 'all' ? '#2563eb' : '#94a3b8'} strokeWidth={2} />
           </Pressable>
-        ))}
-      </ScrollView>
 
-      {/* Map Container Viewport */}
-      <View style={tw`flex-1 mx-4 my-2 rounded-[20px] overflow-hidden border border-slate-200/90 shadow-sm bg-slate-100 relative`}>
+          {/* Category Dropdown Modal */}
+          {categoryDropdownOpen && (
+            <Modal
+              transparent
+              visible={categoryDropdownOpen}
+              animationType="fade"
+              onRequestClose={() => setCategoryDropdownOpen(false)}>
+              <Pressable
+                style={tw`flex-1 bg-black/20 justify-center items-center p-4`}
+                onPress={() => setCategoryDropdownOpen(false)}>
+                <Pressable
+                  style={tw`w-full max-w-xs bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden`}
+                  onPress={(e) => e.stopPropagation()}>
+                  <View style={tw`p-3.5 border-b border-slate-100 flex-row items-center justify-between bg-slate-50`}>
+                    <Text style={tw`text-sm font-bold text-slate-900`}>Filter by Health Category</Text>
+                    <Pressable
+                      onPress={() => setCategoryDropdownOpen(false)}
+                      style={tw`p-1 rounded-lg hover:bg-slate-200`}>
+                      <X size={16} color="#64748b" strokeWidth={2} />
+                    </Pressable>
+                  </View>
+
+                  <View style={tw`p-2`}>
+                    {FILTERS.map((f) => {
+                      const count =
+                        f.key === 'all'
+                          ? all.length
+                          : all.filter((s) => s.category === f.key).length;
+                      const isSelected = category === f.key;
+                      const dotColor =
+                        f.key === 'all' ? '#2563eb' : CATEGORY_META[f.key as Category].color;
+
+                      return (
+                        <Pressable
+                          key={f.key}
+                          onPress={() => {
+                            setCategory(f.key);
+                            setCategoryDropdownOpen(false);
+                          }}
+                          style={[
+                            tw`flex-row items-center justify-between px-3 py-2.5 rounded-xl mb-1`,
+                            isSelected
+                              ? tw`bg-blue-50 border border-blue-200`
+                              : tw`hover:bg-slate-50`,
+                          ]}>
+                          <View style={tw`flex-row items-center`}>
+                            <View
+                              style={[
+                                tw`w-2.5 h-2.5 rounded-full mr-2.5`,
+                                { backgroundColor: dotColor },
+                              ]}
+                            />
+                            <Text
+                              style={[
+                                tw`text-xs`,
+                                isSelected
+                                  ? tw`font-semibold text-blue-800`
+                                  : tw`font-medium text-slate-700`,
+                              ]}>
+                              {f.label}
+                            </Text>
+                          </View>
+                          <View
+                            style={[
+                              tw`rounded-full px-2 py-0.5`,
+                              isSelected ? tw`bg-blue-100` : tw`bg-slate-100`,
+                            ]}>
+                            <Text
+                              style={[
+                                tw`text-[10px] font-medium`,
+                                isSelected ? tw`text-blue-800` : tw`text-slate-500`,
+                              ]}>
+                              {count}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </Pressable>
+              </Pressable>
+            </Modal>
+          )}
+        </View>
+
+        {/* Right: State Selector Dropdown Button */}
+        <View style={tw`relative z-40 flex-shrink-0`}>
+          <Pressable
+            onPress={() => setStateDropdownOpen((prev) => !prev)}
+            style={[
+              tw`flex-row items-center justify-between px-3 py-1.5 bg-white border rounded-xl shadow-2xs min-w-[185px]`,
+              state ? tw`border-blue-400 bg-blue-50/50` : tw`border-slate-200`,
+            ]}>
+            <View style={tw`flex-row items-center flex-1 mr-2`}>
+              <MapPin size={13} color={state ? '#2563eb' : '#64748b'} strokeWidth={2} style={tw`mr-1.5`} />
+              <Text
+                style={[
+                  tw`text-xs font-semibold`,
+                  state ? tw`text-blue-800` : tw`text-slate-700`,
+                ]}
+                numberOfLines={1}>
+                {state ? state : `All States (${states.length})`}
+              </Text>
+            </View>
+            <ChevronDown size={13} color={state ? '#2563eb' : '#94a3b8'} strokeWidth={2} />
+          </Pressable>
+
+          {/* State Dropdown Modal / Popover */}
+          {stateDropdownOpen && (
+            <Modal
+              transparent
+              visible={stateDropdownOpen}
+              animationType="fade"
+              onRequestClose={() => setStateDropdownOpen(false)}>
+              <Pressable
+                style={tw`flex-1 bg-black/20 justify-center items-center p-4`}
+                onPress={() => setStateDropdownOpen(false)}>
+                <Pressable
+                  style={tw`w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden`}
+                  onPress={(e) => e.stopPropagation()}>
+                  {/* Dropdown Header */}
+                  <View style={tw`p-3.5 border-b border-slate-100 flex-row items-center justify-between bg-slate-50`}>
+                    <View style={tw`flex-row items-center`}>
+                      <MapPin size={15} color="#2563eb" strokeWidth={2} style={tw`mr-2`} />
+                      <Text style={tw`text-sm font-bold text-slate-900`}>Select State / UT</Text>
+                    </View>
+                    <Pressable
+                      onPress={() => setStateDropdownOpen(false)}
+                      style={tw`p-1 rounded-lg hover:bg-slate-200`}>
+                      <X size={16} color="#64748b" strokeWidth={2} />
+                    </Pressable>
+                  </View>
+
+                  {/* Search Input */}
+                  <View style={tw`p-3 border-b border-slate-100 bg-white`}>
+                    <View style={tw`flex-row items-center bg-slate-50 rounded-xl px-3 py-2 border border-slate-200`}>
+                      <Search size={14} color="#64748b" strokeWidth={2} style={tw`mr-2 flex-shrink-0`} />
+                      <TextInput
+                        value={stateSearch}
+                        onChangeText={setStateSearch}
+                        placeholder="Search state name…"
+                        placeholderTextColor="#94a3b8"
+                        style={[
+                          tw`flex-1 text-xs text-slate-800 font-medium bg-transparent border-0`,
+                          Platform.OS === 'web'
+                            ? ({
+                                outlineStyle: 'none',
+                                outline: 'none',
+                                border: 'none',
+                                borderWidth: 0,
+                              } as any)
+                            : {},
+                        ]}
+                        autoFocus
+                      />
+                      {!!stateSearch && (
+                        <Pressable onPress={() => setStateSearch('')}>
+                          <X size={14} color="#94a3b8" strokeWidth={2} />
+                        </Pressable>
+                      )}
+                    </View>
+                  </View>
+
+                  {/* State Options List */}
+                  <ScrollView style={tw`max-h-72 p-2`}>
+                    {/* All States Option */}
+                    <Pressable
+                      onPress={() => {
+                        setState(null);
+                        setStateDropdownOpen(false);
+                      }}
+                      style={[
+                        tw`flex-row items-center justify-between px-3 py-2.5 rounded-xl mb-1`,
+                        !state ? tw`bg-blue-50 border border-blue-200` : tw`hover:bg-slate-50`,
+                      ]}>
+                      <Text
+                        style={[
+                          tw`text-xs font-semibold`,
+                          !state ? tw`text-blue-700` : tw`text-slate-700`,
+                        ]}>
+                        All States &amp; UTs
+                      </Text>
+                      <View style={tw`bg-slate-100 rounded-full px-2 py-0.5`}>
+                        <Text style={tw`text-[10px] font-medium text-slate-600`}>
+                          {all.length} stations
+                        </Text>
+                      </View>
+                    </Pressable>
+
+                    {/* Individual States */}
+                    {filteredStates.map((st) => {
+                      const count = stateCounts.get(st) ?? 0;
+                      const isSelected = state === st;
+                      return (
+                        <Pressable
+                          key={st}
+                          onPress={() => {
+                            setState(st);
+                            setStateDropdownOpen(false);
+                          }}
+                          style={[
+                            tw`flex-row items-center justify-between px-3 py-2 rounded-xl mb-1`,
+                            isSelected
+                              ? tw`bg-blue-50 border border-blue-200`
+                              : tw`hover:bg-slate-50`,
+                          ]}>
+                          <Text
+                            style={[
+                              tw`text-xs font-medium`,
+                              isSelected ? tw`text-blue-700 font-semibold` : tw`text-slate-700`,
+                            ]}>
+                            {st}
+                          </Text>
+                          <View
+                            style={[
+                              tw`rounded-full px-2 py-0.5`,
+                              isSelected ? tw`bg-blue-100` : tw`bg-slate-100`,
+                            ]}>
+                            <Text
+                              style={[
+                                tw`text-[10px] font-medium`,
+                                isSelected ? tw`text-blue-800` : tw`text-slate-500`,
+                              ]}>
+                              {count}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </Pressable>
+              </Pressable>
+            </Modal>
+          )}
+        </View>
+      </View>
+
+      {/* Expanded Interactive Map Viewport */}
+      <View style={tw`flex-1 mx-3.5 my-2 rounded-[20px] overflow-hidden border border-slate-200/90 shadow-sm bg-slate-100 relative`}>
         <StationMap
           stations={shown}
           mode={mode}
@@ -210,7 +427,7 @@ export default function MapScreen() {
 
       {/* Selected Station Quick Preview Card */}
       {selectedStation && (
-        <Card style={tw`mx-4 mb-2 p-3.5 border-sky-300/80 bg-sky-50/40 shadow-sm`}>
+        <Card style={tw`mx-3.5 mb-2 p-3 border-blue-300/80 bg-blue-50/50 shadow-sm`}>
           <View style={tw`flex-row items-start justify-between`}>
             <View style={tw`flex-1 pr-2`}>
               <View style={tw`flex-row items-center`}>
@@ -228,7 +445,7 @@ export default function MapScreen() {
             <CategoryPill category={selectedStation.category} small />
           </View>
 
-          <View style={tw`flex-row items-center justify-between mt-2.5 pt-2 border-t border-sky-200/60`}>
+          <View style={tw`flex-row items-center justify-between mt-2 pt-1.5 border-t border-blue-200/60`}>
             <View style={tw`flex-row items-center flex-wrap`}>
               <TrendBadge value={selectedStation.trend_m_per_year} />
               <Text style={tw`text-xs font-medium text-slate-700 ml-3`}>
@@ -246,7 +463,7 @@ export default function MapScreen() {
                   params: { code: selectedStation.code },
                 })
               }
-              style={tw`bg-sky-600 hover:bg-sky-700 px-3 py-1 rounded-lg flex-row items-center shadow-2xs`}>
+              style={tw`bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg flex-row items-center shadow-2xs`}>
               <Text style={tw`text-white text-xs font-semibold mr-1`}>Analytics</Text>
               <ArrowRight size={12} color="#fff" strokeWidth={2} />
             </Pressable>
@@ -255,9 +472,9 @@ export default function MapScreen() {
       )}
 
       {/* Footer Info */}
-      <View style={tw`mx-4 mb-2 flex-row items-center justify-between`}>
+      <View style={tw`mx-4 mb-1.5 flex-row items-center justify-between`}>
         <Text style={tw`text-[10px] text-slate-400 font-normal`}>
-          Click any telemetry marker for instant hydrograph &amp; diagnostics
+          Showing {shown.length} DWLR nodes • Click any telemetry marker for instant hydrograph
         </Text>
         <Text style={tw`text-[10px] font-medium text-slate-500`}>
           CGWB India-WRIS Telemetry Engine

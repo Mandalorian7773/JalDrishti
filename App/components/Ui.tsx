@@ -65,11 +65,11 @@ export const SectionTitle = ({
     <View style={tw`flex-1 mr-2`}>
       <View style={tw`flex-row items-center`}>
         {IconComponent && (
-          <View style={tw`w-5.5 h-5.5 rounded-lg bg-sky-500/10 items-center justify-center mr-2 border border-sky-500/20`}>
+          <View style={tw`w-5.5 h-5.5 rounded-lg bg-blue-600/10 items-center justify-center mr-2 border border-blue-600/20`}>
             {typeof IconComponent === 'function' ? (
-              <IconComponent size={12} color="#0284c7" strokeWidth={2} />
+              <IconComponent size={12} color="#2563eb" strokeWidth={2} />
             ) : (
-              <Activity size={12} color="#0284c7" strokeWidth={2} />
+              <Activity size={12} color="#2563eb" strokeWidth={2} />
             )}
           </View>
         )}
@@ -91,11 +91,11 @@ export const PulseBadge = ({
   active?: boolean;
 }) => (
   <View
-    style={tw`flex-row items-center bg-white border border-slate-200 rounded-full px-2.5 py-0.5 shadow-2xs`}>
+    style={tw`flex-row items-center bg-white border border-slate-200/90 rounded-full px-2.5 py-0.5 shadow-2xs`}>
     <View
       style={[
         tw`w-1.5 h-1.5 rounded-full mr-1.5`,
-        { backgroundColor: active ? '#0284c7' : '#94a3b8' },
+        { backgroundColor: active ? '#2563eb' : '#94a3b8' },
       ]}
     />
     <Text style={tw`text-[10px] font-medium text-slate-700 tracking-wide`}>{label}</Text>
@@ -103,8 +103,8 @@ export const PulseBadge = ({
 );
 
 export const BlueBadge = ({ label }: { label: string }) => (
-  <View style={tw`bg-sky-50 border border-sky-200/80 rounded-full px-2.5 py-0.5`}>
-    <Text style={tw`text-[9px] font-semibold text-sky-700 uppercase tracking-wider`}>
+  <View style={tw`bg-blue-50 border border-blue-200/80 rounded-full px-2.5 py-0.5`}>
+    <Text style={tw`text-[9px] font-semibold text-blue-700 uppercase tracking-wider`}>
       {label}
     </Text>
   </View>
@@ -115,7 +115,7 @@ export const Stat = ({
   value,
   unit,
   icon: IconComponent,
-  tint = '#0284c7',
+  tint = '#2563eb',
   hint,
   delta,
   style,
@@ -253,18 +253,18 @@ export const TrendBadge = ({ value }: { value: number | null }) => {
 
 export const AnomalyBadge = ({ anomaly }: { anomaly: string }) => (
   <View
-    style={tw`flex-row items-center bg-sky-50 border border-sky-200/70 rounded-md px-2 py-0.5 mr-1.5 mt-1`}>
-    <AlertTriangle size={11} color="#0284c7" strokeWidth={2} />
-    <Text style={tw`text-[10px] font-medium text-sky-800 ml-1`}>
+    style={tw`flex-row items-center bg-blue-50 border border-blue-200/70 rounded-md px-2 py-0.5 mr-1.5 mt-1`}>
+    <AlertTriangle size={11} color="#2563eb" strokeWidth={2} />
+    <Text style={tw`text-[10px] font-medium text-blue-800 ml-1`}>
       {ANOMALY_LABEL[anomaly] ?? anomaly}
     </Text>
   </View>
 );
 
 export const Loading = ({ label = 'Loading DWLR telemetry feed…' }: { label?: string }) => (
-  <View style={tw`flex-1 items-center justify-center py-20 bg-slate-50`}>
-    <View style={tw`w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200/80 items-center justify-center mb-3 shadow-2xs`}>
-      <ActivityIndicator size="small" color="#0284c7" />
+  <View style={tw`flex-1 items-center justify-center py-20 bg-slate-50/50`}>
+    <View style={tw`w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200/80 items-center justify-center mb-3 shadow-2xs`}>
+      <ActivityIndicator size="small" color="#2563eb" />
     </View>
     <Text style={tw`text-sm font-semibold text-slate-800`}>{label}</Text>
     <Text style={tw`text-xs text-slate-400 mt-1 font-normal`}>
@@ -298,7 +298,7 @@ export const ErrorState = ({
     {onRetry && (
       <Pressable
         onPress={onRetry}
-        style={tw`mt-4 bg-sky-600 hover:bg-sky-700 px-5 py-2.5 rounded-xl shadow-sm`}>
+        style={tw`mt-4 bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl shadow-sm`}>
         <Text style={tw`text-white text-xs font-semibold`}>Retry Connection</Text>
       </Pressable>
     )}
