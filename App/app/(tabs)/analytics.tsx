@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -40,7 +40,7 @@ const chartConfig = {
   backgroundGradientFrom: '#ffffff',
   backgroundGradientTo: '#ffffff',
   decimalPlaces: 1,
-  color: (o = 1) => `rgba(2, 132, 199, ${o})`,
+  color: (o = 1) => `rgba(37, 99, 235, ${o})`,
   labelColor: (o = 1) => `rgba(71, 85, 105, ${o})`,
   propsForDots: { r: '0' },
   propsForBackgroundLines: { stroke: '#f8fafc', strokeDasharray: '' },
@@ -93,7 +93,7 @@ export default function AnalyticsScreen() {
       datasets: [
         {
           data: hist.map((p) => p.level_mbgl),
-          color: (o = 1) => `rgba(2, 132, 199, ${o})`,
+          color: (o = 1) => `rgba(37, 99, 235, ${o})`,
           strokeWidth: 2.2,
         },
       ],
@@ -116,7 +116,7 @@ export default function AnalyticsScreen() {
         {/* Mobile Header */}
         {!wide && (
           <View style={tw`pt-1 pb-1`}>
-            <Text style={tw`text-[10px] font-semibold text-sky-600 uppercase tracking-widest`}>
+            <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
               DEEP METRICS
             </Text>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
@@ -133,13 +133,23 @@ export default function AnalyticsScreen() {
 
         {/* Station Search Input */}
         <View style={tw`flex-row items-center bg-white rounded-xl px-3.5 mt-2 border border-slate-200 shadow-2xs`}>
-          <Search size={16} color="#0284c7" strokeWidth={2} />
+          <Search size={16} color="#2563eb" strokeWidth={2} style={tw`flex-shrink-0`} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search station name, code, district, or state…"
             placeholderTextColor="#94a3b8"
-            style={tw`flex-1 py-3 px-2.5 text-xs text-slate-900 font-medium`}
+            style={[
+              tw`flex-1 py-3 px-2.5 text-xs text-slate-900 font-medium bg-transparent border-0`,
+              Platform.OS === 'web'
+                ? ({
+                    outlineStyle: 'none',
+                    outline: 'none',
+                    border: 'none',
+                    borderWidth: 0,
+                  } as any)
+                : {},
+            ]}
           />
           {!!query && (
             <Pressable onPress={() => setQuery('')}>
@@ -159,7 +169,7 @@ export default function AnalyticsScreen() {
                 style={[
                   tw`mx-1 px-3.5 py-2.5 rounded-xl border shadow-2xs transition-all`,
                   isSelected
-                    ? tw`bg-sky-600 border-sky-700`
+                    ? tw`bg-blue-600 border-blue-700`
                     : tw`bg-white border-slate-200 hover:border-slate-300`,
                 ]}>
                 <Text
@@ -173,7 +183,7 @@ export default function AnalyticsScreen() {
                 <Text
                   style={[
                     tw`text-[10px] mt-0.5 font-normal`,
-                    isSelected ? tw`text-sky-100` : tw`text-slate-400`,
+                    isSelected ? tw`text-blue-100` : tw`text-slate-400`,
                   ]}
                   numberOfLines={1}>
                   {s.district}, {s.state}
@@ -203,8 +213,8 @@ export default function AnalyticsScreen() {
                     {d.district}, {d.state} • Tehsil: {d.tehsil || '—'} • Block: {d.block || '—'}
                   </Text>
                   <View style={tw`flex-row items-center flex-wrap mt-2.5`}>
-                    <View style={tw`bg-sky-50 border border-sky-200/80 rounded-md px-2 py-0.5 mr-2 mb-1`}>
-                      <Text style={tw`text-[10px] font-medium text-sky-800`}>
+                    <View style={tw`bg-blue-50 border border-blue-200/80 rounded-md px-2 py-0.5 mr-2 mb-1`}>
+                      <Text style={tw`text-[10px] font-medium text-blue-800`}>
                         {d.well_type || 'Borewell'} ({fmt(d.well_depth_m, 0, ' m depth')})
                       </Text>
                     </View>
@@ -265,13 +275,13 @@ export default function AnalyticsScreen() {
               <GlassCard style={tw`mt-4`}>
                 <View style={tw`flex-row items-center justify-between mb-3`}>
                   <View style={tw`flex-row items-center`}>
-                    <Sparkles size={16} color="#38bdf8" strokeWidth={2} style={tw`mr-2`} />
+                    <Sparkles size={16} color="#60a5fa" strokeWidth={2} style={tw`mr-2`} />
                     <Text style={tw`text-sm font-semibold text-white`}>
                       90-Day Predictive Groundwater Model
                     </Text>
                   </View>
-                  <View style={tw`bg-sky-500/20 border border-sky-400/30 rounded-full px-2.5 py-0.5`}>
-                    <Text style={tw`text-[10px] font-medium text-sky-300`}>Harmonic Forecast</Text>
+                  <View style={tw`bg-blue-500/20 border border-blue-400/30 rounded-full px-2.5 py-0.5`}>
+                    <Text style={tw`text-[10px] font-medium text-blue-300`}>Harmonic Forecast</Text>
                   </View>
                 </View>
 
@@ -321,7 +331,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.post_monsoon_mbgl, 2)}
                 unit="m bgl"
                 icon={CloudRain}
-                tint="#0ea5e9"
+                tint="#2563eb"
                 hint="Oct–Nov replenishment"
               />
               <Stat
@@ -330,7 +340,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.seasonal_fluctuation_m, 2)}
                 unit="m"
                 icon={Layers}
-                tint="#0891b2"
+                tint="#1d4ed8"
                 hint="Water table fluctuation"
               />
               <Stat
@@ -339,7 +349,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.recharge_mm, 0)}
                 unit="mm"
                 icon={Droplet}
-                tint="#0284c7"
+                tint="#2563eb"
                 hint={`Specific Yield Sy = ${d.specific_yield ?? '0.03'}`}
               />
               <Stat

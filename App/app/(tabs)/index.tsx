@@ -97,7 +97,7 @@ export default function DashboardScreen() {
       datasets: [
         {
           data: rows.map((r) => r.anomaly_m),
-          color: (o = 1) => `rgba(2, 132, 199, ${o})`,
+          color: (o = 1) => `rgba(37, 99, 235, ${o})`,
           strokeWidth: 2.2,
         },
       ],
@@ -129,7 +129,7 @@ export default function DashboardScreen() {
         {/* Mobile Header */}
         {!wide && (
           <View style={tw`mb-3 px-1`}>
-            <Text style={tw`text-[10px] font-semibold text-sky-600 uppercase tracking-widest`}>
+            <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
               COMMAND DECK
             </Text>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
@@ -157,7 +157,7 @@ export default function DashboardScreen() {
               <View
                 key={chip.label}
                 style={tw`flex-row items-center bg-white border border-slate-200/90 rounded-full px-2.5 py-0.5 mr-2 mb-1 shadow-2xs`}>
-                <Icon size={11} color="#0284c7" strokeWidth={2} style={tw`mr-1.5`} />
+                <Icon size={11} color="#2563eb" strokeWidth={2} style={tw`mr-1.5`} />
                 <Text style={tw`text-[10px] font-semibold text-slate-700`}>{chip.label}</Text>
               </View>
             );
@@ -172,7 +172,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_level, 2)}
             unit="m bgl"
             icon={Droplet}
-            tint="#0ea5e9"
+            tint="#2563eb"
             hint="Depth below ground"
           />
           <Stat
@@ -191,7 +191,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_recharge, 0)}
             unit="mm"
             icon={CloudRain}
-            tint="#6366f1"
+            tint="#4f46e5"
             hint="WTF Method (GEC-2015)"
           />
           <Stat
@@ -200,7 +200,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_fluctuation, 2)}
             unit="m"
             icon={Layers}
-            tint="#0284c7"
+            tint="#1d4ed8"
             hint="Pre vs Post monsoon"
           />
           <Stat
@@ -221,7 +221,7 @@ export default function DashboardScreen() {
             value={`${s.declining}`}
             unit={`/ ${s.recovering} up`}
             icon={TrendingDown}
-            tint="#0369a1"
+            tint="#1e40af"
             hint="Stations losing table"
           />
           <Stat
@@ -230,7 +230,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_quality, 0)}
             unit="/100"
             icon={ShieldCheck}
-            tint="#8b5cf6"
+            tint="#3b82f6"
             hint={`${s.flagged_sensors} sensors flagged`}
           />
           <Stat
@@ -261,7 +261,7 @@ export default function DashboardScreen() {
                   backgroundGradientFrom: '#ffffff',
                   backgroundGradientTo: '#ffffff',
                   decimalPlaces: 1,
-                  color: (o = 1) => `rgba(2, 132, 199, ${o})`,
+                  color: (o = 1) => `rgba(37, 99, 235, ${o})`,
                   labelColor: (o = 1) => `rgba(71, 85, 105, ${o})`,
                   propsForDots: { r: '0' },
                   propsForBackgroundLines: { stroke: '#f8fafc', strokeDasharray: '' },
@@ -273,7 +273,7 @@ export default function DashboardScreen() {
                 style={{ marginLeft: -10 }}
               />
               <View style={tw`flex-row items-center px-4 mt-1.5 pt-2 border-t border-slate-100`}>
-                <Info size={13} color="#0284c7" strokeWidth={2} style={tw`mr-2`} />
+                <Info size={13} color="#2563eb" strokeWidth={2} style={tw`mr-2`} />
                 <Text style={tw`flex-1 text-[10px] text-slate-500 leading-4 font-normal`}>
                   Anomaly is measured in metres relative to station baseline. Upward values reflect water table deepening; downward shifts indicate monsoon replenishment.
                 </Text>
@@ -304,7 +304,7 @@ export default function DashboardScreen() {
                   Total Validated Recorders: <Text style={tw`font-semibold text-slate-900`}>{s.total}</Text>
                 </Text>
                 <Pressable onPress={() => router.push('/(tabs)/map')}>
-                  <Text style={tw`text-xs font-semibold text-sky-600`}>View GIS Map →</Text>
+                  <Text style={tw`text-xs font-semibold text-blue-600`}>View GIS Map →</Text>
                 </Pressable>
               </View>
             </Card>
@@ -318,7 +318,7 @@ export default function DashboardScreen() {
               icon={AlertCircle}
               action={
                 <Pressable onPress={() => router.push('/(tabs)/alerts')}>
-                  <Text style={tw`text-xs text-sky-600 font-semibold`}>All Alerts →</Text>
+                  <Text style={tw`text-xs text-blue-600 font-semibold`}>All Alerts →</Text>
                 </Pressable>
               }
             />
@@ -338,15 +338,15 @@ export default function DashboardScreen() {
         />
         <GlassCard>
           <View style={tw`flex-row items-start mb-3`}>
-            <View style={tw`w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/30 items-center justify-center mr-3`}>
-              <Wrench size={16} color="#38bdf8" strokeWidth={2} />
+            <View style={tw`w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 items-center justify-center mr-3`}>
+              <Wrench size={16} color="#60a5fa" strokeWidth={2} />
             </View>
             <View style={tw`flex-1`}>
               <Text style={tw`text-sm font-semibold text-white`}>
                 Artificial Recharge Priority Allocation
               </Text>
               <Text style={tw`text-xs text-slate-300 mt-1 leading-5 font-normal`}>
-                <Text style={tw`font-semibold text-sky-400`}>{s.at_risk} monitoring stations</Text> indicate severe groundwater stress (&gt; 0.3 m/yr depletion). Recommend immediate sanction of Check Dams and Percolation Tanks under PMKSY &amp; Jal Jeevan Mission in these identified blocks.
+                <Text style={tw`font-semibold text-blue-400`}>{s.at_risk} monitoring stations</Text> indicate severe groundwater stress (&gt; 0.3 m/yr depletion). Recommend immediate sanction of Check Dams and Percolation Tanks under PMKSY &amp; Jal Jeevan Mission in these identified blocks.
               </Text>
             </View>
           </View>
@@ -354,15 +354,15 @@ export default function DashboardScreen() {
           <View style={tw`h-px bg-slate-800 my-2`} />
 
           <View style={tw`flex-row items-start mt-2`}>
-            <View style={tw`w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/30 items-center justify-center mr-3`}>
-              <Cpu size={16} color="#c084fc" strokeWidth={2} />
+            <View style={tw`w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 items-center justify-center mr-3`}>
+              <Cpu size={16} color="#93c5fd" strokeWidth={2} />
             </View>
             <View style={tw`flex-1`}>
               <Text style={tw`text-sm font-semibold text-white`}>
                 Automated Sensor Quality Assurance
               </Text>
               <Text style={tw`text-xs text-slate-300 mt-1 leading-5 font-normal`}>
-                <Text style={tw`font-semibold text-purple-300`}>{s.flagged_sensors} sensors</Text> exhibited stuck telemetry (flatline), implausible spikes, or transmission gaps. Automatically isolated from national baseline computations to safeguard policy integrity.
+                <Text style={tw`font-semibold text-blue-300`}>{s.flagged_sensors} sensors</Text> exhibited stuck telemetry (flatline), implausible spikes, or transmission gaps. Automatically isolated from national baseline computations to safeguard policy integrity.
               </Text>
             </View>
           </View>

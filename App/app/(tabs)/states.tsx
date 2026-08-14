@@ -47,7 +47,7 @@ export default function StatesScreen() {
         {/* Mobile Header */}
         {!wide && (
           <View style={tw`pt-1 pb-1`}>
-            <Text style={tw`text-[10px] font-semibold text-sky-600 uppercase tracking-widest`}>
+            <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
               VULNERABILITY INDEX
             </Text>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
@@ -129,7 +129,7 @@ export default function StatesScreen() {
                       />
                     </View>
                     <Text style={tw`text-[11px] font-medium text-slate-500`}>
-                      {r.stations} stations • <Text style={tw`font-semibold ${r.at_risk > 0 ? 'text-sky-700' : 'text-slate-600'}`}>{r.at_risk} at risk ({atRiskPct}%)</Text>
+                      {r.stations} stations • <Text style={tw`font-semibold ${r.at_risk > 0 ? 'text-blue-700' : 'text-slate-600'}`}>{r.at_risk} at risk ({atRiskPct}%)</Text>
                     </Text>
                   </View>
 
@@ -158,14 +158,14 @@ export default function StatesScreen() {
         />
         <GlassCard>
           <View style={tw`flex-row items-center mb-3`}>
-            <View style={tw`w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/30 items-center justify-center mr-2.5`}>
-              <Droplets size={19} color="#38bdf8" strokeWidth={2} />
+            <View style={tw`w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 items-center justify-center mr-2.5`}>
+              <Droplets size={19} color="#60a5fa" strokeWidth={2} />
             </View>
             <View>
               <Text style={tw`text-sm font-semibold text-white`}>
                 Automated Groundwater Intelligence Engine
               </Text>
-              <Text style={tw`text-xs text-sky-300 font-medium`}>
+              <Text style={tw`text-xs text-blue-300 font-medium`}>
                 Ministry of Jal Shakti • Central Ground Water Board (CGWB)
               </Text>
             </View>
