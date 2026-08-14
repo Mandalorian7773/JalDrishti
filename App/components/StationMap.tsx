@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Platform, View } from 'react-native';
 
+import { useTheme } from '@/constants/ThemeContext';
 import { CATEGORY_META, Station } from '@/constants/api';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- must not load on web
@@ -13,7 +14,7 @@ interface StationMapProps {
   style?: any;
 }
 
-const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') => {
+const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations', isDark: boolean = true) => {
   const points = stations
     .filter((s) => s.latitude && s.longitude)
     .map((s) => [
@@ -32,6 +33,62 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
       s.data_quality ?? null,
     ]);
 
+  const themeCss = isDark
+    ? `
+  .leaflet-popup-content-wrapper { background: #0C1A2B; border-radius: 18px; box-shadow: 0 20px 30px -10px rgba(7, 17, 31, 0.6); padding: 0; border: 1px solid #19304A; }
+  .leaflet-popup-tip { background: #0C1A2B; }
+  .leaflet-popup-content { margin: 16px; font-size: 12px; line-height: 1.5; color: #F4F8FF; }
+  .popup-title { font-size: 14px; font-weight: 800; color: #F4F8FF; }
+  .popup-sub { font-size: 11px; color: #7890AA; margin-bottom: 10px; border-bottom: 1px solid #19304A; padding-bottom: 8px; }
+  .stat-box { background: #081525; border: 1px solid #19304A; border-radius: 10px; padding: 6px 10px; }
+  .stat-label { font-size: 10px; color: #7890AA; font-weight: 600; text-transform: uppercase; }
+  .stat-val { font-size: 12px; font-weight: 800; color: #F4F8FF; margin-top: 2px; }
+  .btn-link { display: block; text-align: center; background: #2F80FF; color: #F4F8FF !important; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; text-decoration: none; transition: background 0.2s; box-shadow: 0 2px 6px rgba(47, 128, 255, 0.35); }
+  .btn-link:hover { background: #55A8FF; }
+
+  .intelligence-node { background: rgba(12, 26, 43, 0.92); border: 1px solid #19304A; color: #F4F8FF; box-shadow: 0 4px 14px rgba(7, 17, 31, 0.4); }
+  .node-pulse-dot { background: #2F80FF; box-shadow: 0 0 6px rgba(47, 128, 255, 0.6); }
+  .node-text { color: #F4F8FF; }
+  .node-highlight { color: #55A8FF; }
+
+  .intensity-legend { background: rgba(12, 26, 43, 0.92); border: 1px solid #19304A; box-shadow: 0 4px 14px rgba(7, 17, 31, 0.4); }
+  .legend-item { color: #7890AA; }
+
+  .zoom-slider-capsule { background: rgba(12, 26, 43, 0.95); border: 1px solid #19304A; box-shadow: 0 8px 24px -4px rgba(7, 17, 31, 0.5); }
+  .zoom-btn { background: #081525; color: #F4F8FF; }
+  .zoom-btn:hover { background: #2F80FF; color: #F4F8FF; box-shadow: 0 2px 8px rgba(47, 128, 255, 0.35); }
+  .zoom-track-bg { background: #19304A; }
+  .zoom-track-fill { background: #2F80FF; }
+  .zoom-track-thumb { background: #2F80FF; border: 2.5px solid #F4F8FF; box-shadow: 0 1px 4px rgba(7, 17, 31, 0.5); }
+`
+    : `
+  .leaflet-popup-content-wrapper { background: #FFFFFF; border-radius: 18px; box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.18); padding: 0; border: 1px solid #E2E8F0; }
+  .leaflet-popup-tip { background: #FFFFFF; }
+  .leaflet-popup-content { margin: 16px; font-size: 12px; line-height: 1.5; color: #0F172A; }
+  .popup-title { font-size: 14px; font-weight: 800; color: #0F172A; }
+  .popup-sub { font-size: 11px; color: #64748B; margin-bottom: 10px; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px; }
+  .stat-box { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 6px 10px; }
+  .stat-label { font-size: 10px; color: #64748B; font-weight: 600; text-transform: uppercase; }
+  .stat-val { font-size: 12px; font-weight: 800; color: #0F172A; margin-top: 2px; }
+  .btn-link { display: block; text-align: center; background: #2563EB; color: #FFFFFF !important; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; text-decoration: none; transition: background 0.2s; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3); }
+  .btn-link:hover { background: #1D4ED8; }
+
+  .intelligence-node { background: rgba(255, 255, 255, 0.94); border: 1px solid #E2E8F0; color: #0F172A; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+  .node-pulse-dot { background: #2563EB; box-shadow: 0 0 6px rgba(37, 99, 235, 0.6); }
+  .node-text { color: #0F172A; }
+  .node-highlight { color: #2563EB; }
+
+  .intensity-legend { background: rgba(255, 255, 255, 0.94); border: 1px solid #E2E8F0; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+  .legend-item { color: #64748B; }
+
+  .zoom-slider-capsule { background: rgba(255, 255, 255, 0.95); border: 1px solid #E2E8F0; box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.12); }
+  .zoom-btn { background: #F8FAFC; color: #0F172A; }
+  .zoom-btn:hover { background: #2563EB; color: #FFFFFF; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); }
+  .zoom-track-bg { background: #E2E8F0; }
+  .zoom-track-fill { background: #2563EB; }
+  .zoom-track-thumb { background: #2563EB; border: 2.5px solid #FFFFFF; box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25); }
+`;
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -42,75 +99,54 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   * { box-sizing: border-box; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; background: #eef2f6; overflow: hidden; }
+  html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; background: ${isDark ? '#07111F' : '#F4F6F9'}; overflow: hidden; }
   
   /* Leaflet Controls & Clean Popup Styling */
   .leaflet-control-zoom { display: none !important; }
-  .leaflet-popup-content-wrapper { border-radius: 18px; box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.25); padding: 0; border: 1px solid #e2e8f0; }
-  .leaflet-popup-content { margin: 16px; font-size: 12px; line-height: 1.5; color: #1e293b; }
   .popup-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-  .popup-title { font-size: 14px; font-weight: 800; color: #0f172a; }
-  .popup-sub { font-size: 11px; color: #64748b; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
   .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
-  .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 6px 10px; }
-  .stat-label { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
-  .stat-val { font-size: 12px; font-weight: 800; color: #0f172a; margin-top: 2px; }
-  .btn-link { display: block; text-align: center; background: #2563eb; color: #ffffff !important; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; text-decoration: none; transition: background 0.2s; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3); }
-  .btn-link:hover { background: #1d4ed8; }
 
-  /* Floating UI Overlay Widgets (Ultra-compact, sleek & unobtrusive) */
+  /* Floating UI Overlay Widgets */
   .overlay-container { position: absolute; inset: 0; pointer-events: none; z-index: 1000; padding: 12px; }
   
-  /* Top-Left Intelligence Node Badge */
   .intelligence-node {
     position: absolute;
     top: 12px;
     left: 12px;
-    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 20px;
     padding: 5px 12px;
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
     pointer-events: auto;
   }
   .node-pulse-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #2563eb;
-    box-shadow: 0 0 6px rgba(37, 99, 235, 0.6);
   }
   .node-text {
     font-size: 11px;
     font-weight: 600;
-    color: #334155;
     letter-spacing: -0.01em;
   }
   .node-highlight {
-    color: #2563eb;
     font-weight: 700;
   }
 
-  /* Bottom-Left Horizontal Depletion Intensity Legend */
   .intensity-legend {
     position: absolute;
     bottom: 12px;
     left: 12px;
-    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 20px;
     padding: 5px 12px;
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
     pointer-events: auto;
   }
   .legend-item {
@@ -119,7 +155,6 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     gap: 5px;
     font-size: 10.5px;
     font-weight: 600;
-    color: #475569;
   }
   .legend-dot {
     width: 7px;
@@ -128,23 +163,19 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     flex-shrink: 0;
   }
 
-  /* Right-Center Vertical Zoom Gauge Capsule with Interactive Line Track */
   .zoom-slider-capsule {
     position: absolute;
     right: 14px;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 20px;
     padding: 6px 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04);
     pointer-events: auto;
     z-index: 1000;
     user-select: none;
@@ -155,8 +186,6 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     height: 26px;
     border-radius: 50%;
     border: none;
-    background: #f8fafc;
-    color: #334155;
     font-size: 16px;
     font-weight: 700;
     display: flex;
@@ -165,11 +194,6 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     cursor: pointer;
     transition: all 0.15s ease;
     line-height: 1;
-  }
-  .zoom-btn:hover {
-    background: #2563eb;
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
   }
 
   .zoom-track-container {
@@ -186,7 +210,6 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     position: absolute;
     width: 4px;
     height: 100%;
-    background: #e2e8f0;
     border-radius: 4px;
   }
 
@@ -194,7 +217,6 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     position: absolute;
     bottom: 0;
     width: 4px;
-    background: #2563eb;
     border-radius: 4px;
     transition: height 0.1s ease-out;
   }
@@ -203,10 +225,7 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     position: absolute;
     width: 14px;
     height: 14px;
-    background: #2563eb;
-    border: 2.5px solid #ffffff;
     border-radius: 50%;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25);
     transform: translateY(50%);
     transition: bottom 0.1s ease-out;
     cursor: grab;
@@ -215,6 +234,8 @@ const buildHtml = (stations: Station[], mode: 'stations' | 'area' = 'stations') 
     cursor: grabbing;
     transform: translateY(50%) scale(1.15);
   }
+
+  ${themeCss}
 </style>
 </head>
 <body>
@@ -263,7 +284,7 @@ var map = L.map('map', {
   maxZoom: MAX_ZOOM
 }).setView([22.5, 78.9], 5);
 
-// High-contrast clean light tiles matching reference design
+// Clean map tiles
 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
   maxZoom: 18
 }).addTo(map);
@@ -416,7 +437,8 @@ export default function StationMap({
   onSelect,
   style,
 }: StationMapProps) {
-  const html = useMemo(() => buildHtml(stations, mode), [stations, mode]);
+  const { isDark } = useTheme();
+  const html = useMemo(() => buildHtml(stations, mode, isDark), [stations, mode, isDark]);
   const cb = useRef(onSelect);
   cb.current = onSelect;
 

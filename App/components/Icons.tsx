@@ -261,6 +261,12 @@ export const Sun = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: Ic
   </Svg>
 );
 
+export const Moon = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <Path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+  </Svg>
+);
+
 export const Layers = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
     <Polygon points="12 2 2 7 12 12 22 7 12 2" />

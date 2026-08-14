@@ -20,6 +20,7 @@ import {
   Sun,
   X,
 } from '@/components/Icons';
+import ThemeToggle from '@/components/ThemeToggle';
 import {
   AnomalyBadge,
   Card,
@@ -33,18 +34,9 @@ import {
   Stat,
   TrendBadge,
 } from '@/components/Ui';
+import { useTheme } from '@/constants/ThemeContext';
 import { Station, StationDetail, fmt, useApi } from '@/constants/api';
 import tw from '@/constants/tailwind';
-
-const chartConfig = {
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
-  decimalPlaces: 1,
-  color: (o = 1) => `rgba(37, 99, 235, ${o})`,
-  labelColor: (o = 1) => `rgba(71, 85, 105, ${o})`,
-  propsForDots: { r: '0' },
-  propsForBackgroundLines: { stroke: '#f8fafc', strokeDasharray: '' },
-};
 
 function thin<T>(rows: T[], n: number): T[] {
   if (rows.length <= n) return rows;
@@ -54,6 +46,7 @@ function thin<T>(rows: T[], n: number): T[] {
 
 export default function AnalyticsScreen() {
   const wide = useWideLayout();
+  const { colors, isDark } = useTheme();
   // Subscribed, not sampled: Dimensions.get() does not re-render on rotation,
   // and reads 0 during the web static export, which made the chart negative.
   const { width } = useWindowDimensions();
@@ -93,12 +86,12 @@ export default function AnalyticsScreen() {
       datasets: [
         {
           data: hist.map((p) => p.level_mbgl),
-          color: (o = 1) => `rgba(37, 99, 235, ${o})`,
+          color: (o = 1) => (isDark ? `rgba(47, 128, 255, ${o})` : `rgba(37, 99, 235, ${o})`),
           strokeWidth: 2.2,
         },
       ],
     };
-  }, [detail.data]);
+  }, [detail.data, isDark]);
 
   const projection = useMemo(() => {
     const fc = detail.data?.forecast ?? [];
@@ -111,36 +104,47 @@ export default function AnalyticsScreen() {
   const chartWidth = wide ? Math.min(width - 340, 1140) : Math.max(width - 40, 1);
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-slate-50/50`} edges={wide ? [] : ['top']}>
+    <SafeAreaView style={[tw`flex-1`, { backgroundColor: colors.bgCanvas }]} edges={wide ? [] : ['top']}>
       <ScrollView contentContainerStyle={tw`${wide ? 'px-8 pt-6' : 'px-4 pt-4'} pb-32`} keyboardShouldPersistTaps="handled">
         {/* Mobile Header */}
         {!wide && (
           <View style={tw`pt-1 pb-1`}>
-            <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
-              DEEP METRICS
-            </Text>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text style={[tw`text-[10px] font-semibold uppercase tracking-widest`, { color: colors.brightBlue }]}>
+                DEEP METRICS
+              </Text>
+              <ThemeToggle compact />
+            </View>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
-              <Text style={tw`text-xl font-bold text-slate-900 tracking-tight`}>
+              <Text style={[tw`text-xl font-bold tracking-tight`, { color: colors.textPrimary }]}>
                 Station Analytics &amp; Forecasting
               </Text>
               <PulseBadge label="DWLR Online" />
             </View>
-            <Text style={tw`text-xs text-slate-500 mt-1 font-normal`}>
+            <Text style={[tw`text-xs mt-1 font-normal`, { color: colors.textMuted }]}>
               Hydrograph, GEC-2015 recharge &amp; predictive projection
             </Text>
           </View>
         )}
 
         {/* Station Search Input */}
-        <View style={tw`flex-row items-center bg-white rounded-xl px-3.5 mt-2 border border-slate-200 shadow-2xs`}>
-          <Search size={16} color="#2563eb" strokeWidth={2} style={tw`flex-shrink-0`} />
+        <View
+          style={[
+            tw`flex-row items-center rounded-xl px-3.5 mt-2 border shadow-2xs`,
+            {
+              backgroundColor: colors.cardBg,
+              borderColor: colors.borderColor,
+            },
+          ]}>
+          <Search size={16} color={colors.brightBlue} strokeWidth={2} style={tw`flex-shrink-0`} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search station name, code, district, or state…"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colors.textMuted}
             style={[
-              tw`flex-1 py-3 px-2.5 text-xs text-slate-900 font-medium bg-transparent border-0`,
+              tw`flex-1 py-3 px-2.5 text-xs font-medium bg-transparent border-0`,
+              { color: colors.textPrimary },
               Platform.OS === 'web'
                 ? ({
                     outlineStyle: 'none',
@@ -153,7 +157,7 @@ export default function AnalyticsScreen() {
           />
           {!!query && (
             <Pressable onPress={() => setQuery('')}>
-              <X size={16} color="#94a3b8" strokeWidth={2} />
+              <X size={16} color={colors.textMuted} strokeWidth={2} />
             </Pressable>
           )}
         </View>
@@ -169,13 +173,19 @@ export default function AnalyticsScreen() {
                 style={[
                   tw`mx-1 px-3.5 py-2.5 rounded-xl border shadow-2xs transition-all`,
                   isSelected
-                    ? tw`bg-blue-600 border-blue-700`
-                    : tw`bg-white border-slate-200 hover:border-slate-300`,
+                    ? {
+                        backgroundColor: colors.primaryBlue,
+                        borderColor: colors.brightBlue,
+                      }
+                    : {
+                        backgroundColor: colors.cardBg,
+                        borderColor: colors.borderColor,
+                      },
                 ]}>
                 <Text
                   style={[
                     tw`text-xs font-semibold`,
-                    isSelected ? tw`text-white` : tw`text-slate-800`,
+                    { color: isSelected ? '#FFFFFF' : colors.textPrimary },
                   ]}
                   numberOfLines={1}>
                   {s.name}
@@ -183,7 +193,7 @@ export default function AnalyticsScreen() {
                 <Text
                   style={[
                     tw`text-[10px] mt-0.5 font-normal`,
-                    isSelected ? tw`text-blue-100` : tw`text-slate-400`,
+                    { color: isSelected ? 'rgba(255, 255, 255, 0.8)' : colors.textMuted },
                   ]}
                   numberOfLines={1}>
                   {s.district}, {s.state}
@@ -191,7 +201,7 @@ export default function AnalyticsScreen() {
               </Pressable>
             );
           })}
-          {list.loading && <Text style={tw`text-xs text-slate-400 px-3 py-3 font-normal`}>Searching stations…</Text>}
+          {list.loading && <Text style={[tw`text-xs px-3 py-3 font-normal`, { color: colors.textMuted }]}>Searching stations…</Text>}
         </ScrollView>
 
         {detail.error && <ErrorState message={detail.error} onRetry={detail.reload} />}
@@ -204,27 +214,55 @@ export default function AnalyticsScreen() {
               <View style={tw`flex-row items-start justify-between`}>
                 <View style={tw`flex-1 pr-3`}>
                   <View style={tw`flex-row items-center flex-wrap`}>
-                    <Text style={tw`text-lg font-bold text-slate-900 tracking-tight`}>{d.name}</Text>
-                    <View style={tw`ml-2 bg-slate-100 border border-slate-200 rounded px-2 py-0.5`}>
-                      <Text style={tw`text-[10px] font-mono font-medium text-slate-600`}>{d.code}</Text>
+                    <Text style={[tw`text-lg font-bold tracking-tight`, { color: colors.textPrimary }]}>{d.name}</Text>
+                    <View
+                      style={[
+                        tw`ml-2 border rounded px-2 py-0.5`,
+                        {
+                          backgroundColor: colors.bgSubtle,
+                          borderColor: colors.borderColor,
+                        },
+                      ]}>
+                      <Text style={[tw`text-[10px] font-mono font-medium`, { color: colors.textMuted }]}>{d.code}</Text>
                     </View>
                   </View>
-                  <Text style={tw`text-xs font-normal text-slate-600 mt-1`}>
+                  <Text style={[tw`text-xs font-normal mt-1`, { color: colors.textMuted }]}>
                     {d.district}, {d.state} • Tehsil: {d.tehsil || '—'} • Block: {d.block || '—'}
                   </Text>
                   <View style={tw`flex-row items-center flex-wrap mt-2.5`}>
-                    <View style={tw`bg-blue-50 border border-blue-200/80 rounded-md px-2 py-0.5 mr-2 mb-1`}>
-                      <Text style={tw`text-[10px] font-medium text-blue-800`}>
+                    <View
+                      style={[
+                        tw`border rounded-md px-2 py-0.5 mr-2 mb-1`,
+                        {
+                          backgroundColor: isDark ? 'rgba(47, 128, 255, 0.15)' : 'rgba(37, 99, 235, 0.08)',
+                          borderColor: colors.borderColor,
+                        },
+                      ]}>
+                      <Text style={[tw`text-[10px] font-medium`, { color: colors.brightBlue }]}>
                         {d.well_type || 'Borewell'} ({fmt(d.well_depth_m, 0, ' m depth')})
                       </Text>
                     </View>
-                    <View style={tw`bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5 mr-2 mb-1`}>
-                      <Text style={tw`text-[10px] font-medium text-slate-700`}>
+                    <View
+                      style={[
+                        tw`border rounded-md px-2 py-0.5 mr-2 mb-1`,
+                        {
+                          backgroundColor: colors.bgSubtle,
+                          borderColor: colors.borderColor,
+                        },
+                      ]}>
+                      <Text style={[tw`text-[10px] font-medium`, { color: colors.textMuted }]}>
                         Aquifer: {d.aquifer_type || 'Alluvial'}
                       </Text>
                     </View>
-                    <View style={tw`bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5 mr-2 mb-1`}>
-                      <Text style={tw`text-[10px] font-medium text-slate-700`}>
+                    <View
+                      style={[
+                        tw`border rounded-md px-2 py-0.5 mr-2 mb-1`,
+                        {
+                          backgroundColor: colors.bgSubtle,
+                          borderColor: colors.borderColor,
+                        },
+                      ]}>
+                      <Text style={[tw`text-[10px] font-medium`, { color: colors.textMuted }]}>
                         Agency: {d.agency || 'CGWB'}
                       </Text>
                     </View>
@@ -233,10 +271,10 @@ export default function AnalyticsScreen() {
                 <CategoryPill category={d.category} />
               </View>
 
-              <View style={tw`flex-row items-center justify-between mt-4 pt-3 border-t border-slate-100`}>
+              <View style={[tw`flex-row items-center justify-between mt-4 pt-3 border-t`, { borderColor: colors.borderColor }]}>
                 <TrendBadge value={d.trend_m_per_year} />
-                <Text style={tw`text-xs font-normal text-slate-500`}>
-                  Last Observation: <Text style={tw`font-semibold text-slate-700`}>{d.latest_date || '—'}</Text>
+                <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>
+                  Last Observation: <Text style={[tw`font-semibold`, { color: colors.textPrimary }]}>{d.latest_date || '—'}</Text>
                 </Text>
               </View>
             </Card>
@@ -254,14 +292,22 @@ export default function AnalyticsScreen() {
                     data={chart as any}
                     width={chartWidth}
                     height={230}
-                    chartConfig={chartConfig}
+                    chartConfig={{
+                      backgroundGradientFrom: colors.chartBg,
+                      backgroundGradientTo: colors.chartBg,
+                      decimalPlaces: 1,
+                      color: (o = 1) => (isDark ? `rgba(47, 128, 255, ${o})` : `rgba(37, 99, 235, ${o})`),
+                      labelColor: (o = 1) => (isDark ? `rgba(120, 144, 170, ${o})` : `rgba(100, 116, 139, ${o})`),
+                      propsForDots: { r: '0' },
+                      propsForBackgroundLines: { stroke: colors.chartGrid, strokeDasharray: '' },
+                    }}
                     bezier
                     withDots={false}
                     fromZero={false}
                     yAxisSuffix="m"
                     style={{ marginLeft: -10 }}
                   />
-                  <Text style={tw`text-[11px] text-slate-500 px-4 mt-1 font-normal`}>
+                  <Text style={[tw`text-[11px] px-4 mt-1 font-normal`, { color: colors.textMuted }]}>
                     Depth below ground level. Upward curve indicates groundwater table deepening / depletion; drop indicates recharge.
                   </Text>
                 </>
@@ -275,17 +321,31 @@ export default function AnalyticsScreen() {
               <GlassCard style={tw`mt-4`}>
                 <View style={tw`flex-row items-center justify-between mb-3`}>
                   <View style={tw`flex-row items-center`}>
-                    <Sparkles size={16} color="#60a5fa" strokeWidth={2} style={tw`mr-2`} />
-                    <Text style={tw`text-sm font-semibold text-white`}>
+                    <Sparkles size={16} color={colors.brightBlue} strokeWidth={2} style={tw`mr-2`} />
+                    <Text style={[tw`text-sm font-semibold`, { color: colors.textPrimary }]}>
                       90-Day Predictive Groundwater Model
                     </Text>
                   </View>
-                  <View style={tw`bg-blue-500/20 border border-blue-400/30 rounded-full px-2.5 py-0.5`}>
-                    <Text style={tw`text-[10px] font-medium text-blue-300`}>Harmonic Forecast</Text>
+                  <View
+                    style={[
+                      tw`border rounded-full px-2.5 py-0.5`,
+                      {
+                        backgroundColor: isDark ? 'rgba(47, 128, 255, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                        borderColor: isDark ? 'rgba(47, 128, 255, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                      },
+                    ]}>
+                    <Text style={[tw`text-[10px] font-medium`, { color: colors.brightBlue }]}>Harmonic Forecast</Text>
                   </View>
                 </View>
 
-                <View style={tw`flex-row justify-between bg-slate-800/90 rounded-xl p-3.5 border border-slate-700/60`}>
+                <View
+                  style={[
+                    tw`flex-row justify-between rounded-xl p-3.5 border`,
+                    {
+                      backgroundColor: colors.bgSubtle,
+                      borderColor: colors.borderColor,
+                    },
+                  ]}>
                   {[
                     ['Current Level', d.latest_level_mbgl, 'Observed now'],
                     ['In 30 Days', projection.d30?.level_mbgl, 'Linear projection'],
@@ -293,13 +353,20 @@ export default function AnalyticsScreen() {
                   ].map(([label, value, hint], i) => {
                     const delta = (Number(value) || 0) - (d.latest_level_mbgl ?? 0);
                     return (
-                      <View key={String(label)} style={tw`flex-1 ${i > 0 ? 'border-l border-slate-700/60 pl-3' : ''}`}>
-                        <Text style={tw`text-[10px] font-medium text-slate-400 uppercase tracking-wider`}>{label}</Text>
-                        <Text style={tw`text-lg font-bold text-white mt-1`}>
+                      <View
+                        key={String(label)}
+                        style={[
+                          tw`flex-1`,
+                          i > 0
+                            ? [tw`border-l pl-3`, { borderColor: colors.borderColor }]
+                            : {},
+                        ]}>
+                        <Text style={[tw`text-[10px] font-medium uppercase tracking-wider`, { color: colors.textMuted }]}>{label}</Text>
+                        <Text style={[tw`text-lg font-bold mt-1`, { color: colors.textPrimary }]}>
                           {fmt(value as number, 2)}
-                          <Text style={tw`text-xs font-normal text-slate-400`}> m</Text>
+                          <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}> m</Text>
                         </Text>
-                        <Text style={tw`text-[10px] font-normal text-slate-400 mt-0.5`}>
+                        <Text style={[tw`text-[10px] font-normal mt-0.5`, { color: colors.textMuted }]}>
                           {i > 0 ? `${delta > 0 ? '+' : ''}${delta.toFixed(2)}m ${delta > 0 ? 'drop' : 'rise'}` : hint}
                         </Text>
                       </View>
@@ -331,7 +398,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.post_monsoon_mbgl, 2)}
                 unit="m bgl"
                 icon={CloudRain}
-                tint="#2563eb"
+                tint={colors.primaryBlue}
                 hint="Oct–Nov replenishment"
               />
               <Stat
@@ -340,7 +407,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.seasonal_fluctuation_m, 2)}
                 unit="m"
                 icon={Layers}
-                tint="#1d4ed8"
+                tint={colors.brightBlue}
                 hint="Water table fluctuation"
               />
               <Stat
@@ -349,7 +416,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.recharge_mm, 0)}
                 unit="mm"
                 icon={Droplet}
-                tint="#2563eb"
+                tint={colors.primaryBlue}
                 hint={`Specific Yield Sy = ${d.specific_yield ?? '0.03'}`}
               />
               <Stat
@@ -358,7 +425,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.min_level_mbgl, 2)}
                 unit="m bgl"
                 icon={ArrowUpCircle}
-                tint="#10b981"
+                tint={isDark ? '#34d399' : '#059669'}
                 hint="Historical high"
               />
               <Stat
@@ -367,7 +434,7 @@ export default function AnalyticsScreen() {
                 value={fmt(d.max_level_mbgl, 2)}
                 unit="m bgl"
                 icon={ArrowDownCircle}
-                tint="#ef4444"
+                tint={isDark ? '#f87171' : '#dc2626'}
                 hint="Historical low"
               />
             </View>
@@ -381,11 +448,18 @@ export default function AnalyticsScreen() {
             <Card>
               <View style={tw`flex-row items-center justify-between mb-3`}>
                 <View style={tw`flex-row items-baseline`}>
-                  <Text style={tw`text-3xl font-bold text-slate-900`}>{fmt(d.data_quality, 0)}</Text>
-                  <Text style={tw`text-xs font-normal text-slate-400 ml-1.5`}>/100 Health Score</Text>
+                  <Text style={[tw`text-3xl font-bold`, { color: colors.textPrimary }]}>{fmt(d.data_quality, 0)}</Text>
+                  <Text style={[tw`text-xs font-normal ml-1.5`, { color: colors.textMuted }]}>/100 Health Score</Text>
                 </View>
                 <View style={tw`flex-1 ml-6`}>
-                  <View style={tw`h-2 bg-slate-100 rounded-full overflow-hidden`}>
+                  <View
+                    style={[
+                      tw`h-2 rounded-full overflow-hidden border`,
+                      {
+                        backgroundColor: colors.bgSubtle,
+                        borderColor: colors.borderColor,
+                      },
+                    ]}>
                     <View
                       style={[
                         tw`h-2 rounded-full`,
@@ -393,10 +467,10 @@ export default function AnalyticsScreen() {
                           width: `${d.data_quality ?? 0}%`,
                           backgroundColor:
                             (d.data_quality ?? 0) >= 80
-                              ? '#10b981'
+                              ? (isDark ? '#34d399' : '#10b981')
                               : (d.data_quality ?? 0) >= 50
                               ? '#f59e0b'
-                              : '#ef4444',
+                              : (isDark ? '#f87171' : '#ef4444'),
                         },
                       ]}
                     />
@@ -405,8 +479,8 @@ export default function AnalyticsScreen() {
               </View>
 
               {d.anomalies?.length ? (
-                <View style={tw`mt-2 pt-3 border-t border-slate-100`}>
-                  <Text style={tw`text-xs font-medium text-sky-800 mb-1.5`}>Detected Anomalies:</Text>
+                <View style={[tw`mt-2 pt-3 border-t`, { borderColor: colors.borderColor }]}>
+                  <Text style={[tw`text-xs font-medium mb-1.5`, { color: colors.brightBlue }]}>Detected Anomalies:</Text>
                   <View style={tw`flex-row flex-wrap`}>
                     {d.anomalies.map((a) => (
                       <AnomalyBadge key={a} anomaly={a} />
@@ -414,9 +488,9 @@ export default function AnalyticsScreen() {
                   </View>
                 </View>
               ) : (
-                <View style={tw`flex-row items-center mt-2 pt-3 border-t border-slate-100`}>
-                  <CheckCircle2 size={16} color="#10b981" strokeWidth={2} />
-                  <Text style={tw`text-xs font-medium text-slate-700 ml-2`}>
+                <View style={[tw`flex-row items-center mt-2 pt-3 border-t`, { borderColor: colors.borderColor }]}>
+                  <CheckCircle2 size={16} color={isDark ? '#34d399' : '#10b981'} strokeWidth={2} />
+                  <Text style={[tw`text-xs font-medium ml-2`, { color: colors.textMuted }]}>
                     Telemetry stream healthy • 0 anomalies detected
                   </Text>
                 </View>
