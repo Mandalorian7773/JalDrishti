@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .analytics import forecast
-from .models import Reading, Station
+from .models import Reading, Snapshot, Station
 
 LIST_FIELDS = (
     "code", "name", "state", "district", "latitude", "longitude",
@@ -40,6 +40,19 @@ def server_cache(seconds):
         return wrapper
 
     return decorate
+
+
+FILTER_PARAMS = ("state", "district", "category", "q", "bbox")
+
+
+def _has_filters(request):
+    return any(request.query_params.get(p) for p in FILTER_PARAMS)
+
+
+def _snapshot(key):
+    """Precomputed payload from `analyze`, or None to fall back to a live query."""
+    row = Snapshot.objects.filter(key=key).first()
+    return row.payload if row else None
 
 
 def _clean(qs):
@@ -134,7 +147,26 @@ def station_detail(request, code):
 @api_view(["GET"])
 @server_cache(60)
 def summary(request):
-    qs = _filtered(request)
+    if not _has_filters(request):
+        cached = _snapshot("summary")
+        if cached is not None:
+            return Response(cached)
+    return Response(build_summary(_filtered(request)))
+
+
+def _jsonable(rows):
+    """Dates must be strings to survive a round trip through JSONField."""
+    out = []
+    for r in rows:
+        r = dict(r)
+        if r.get("latest_date"):
+            r["latest_date"] = r["latest_date"].isoformat()
+        out.append(r)
+    return out
+
+
+def build_summary(qs, reading_count=None):
+    """The /summary/ payload. Shared with `analyze`, which precomputes it."""
     clean = _clean(qs)
     agg = clean.aggregate(
         total=Count("id"),
@@ -149,31 +181,25 @@ def summary(request):
     for row in clean.values("category").annotate(n=Count("id")):
         by_category[row["category"]] = row["n"]
 
-    declining = clean.filter(trend_m_per_year__gt=0).count()
-    return Response(
-        {
-            **{k: (round(v, 3) if isinstance(v, float) else v) for k, v in agg.items()},
-            "by_category": by_category,
-            "declining": declining,
-            "recovering": clean.filter(trend_m_per_year__lt=0).count(),
-            "at_risk": by_category["critical"] + by_category["over_exploited"],
-            "stations": qs.count(),
-            "flagged_sensors": qs.exclude(anomalies=[]).count(),
-            "readings": Reading.objects.count(),
-            "states": qs.values("state").distinct().count(),
-            "districts": qs.values("state", "district").distinct().count(),
-            "worst": list(
-                clean.filter(trend_m_per_year__isnull=False)
-                .order_by("-trend_m_per_year")
-                .values(*LIST_FIELDS)[:10]
-            ),
-            "best": list(
-                clean.filter(trend_m_per_year__isnull=False)
-                .order_by("trend_m_per_year")
-                .values(*LIST_FIELDS)[:10]
-            ),
-        }
-    )
+    latest = agg.pop("latest")
+    ranked = clean.filter(trend_m_per_year__isnull=False)
+    return {
+        **{k: (round(v, 3) if isinstance(v, float) else v) for k, v in agg.items()},
+        "latest": latest.isoformat() if latest else None,
+        "by_category": by_category,
+        "declining": clean.filter(trend_m_per_year__gt=0).count(),
+        "recovering": clean.filter(trend_m_per_year__lt=0).count(),
+        "at_risk": by_category["critical"] + by_category["over_exploited"],
+        "stations": qs.count(),
+        "flagged_sensors": qs.exclude(anomalies=[]).count(),
+        # counting 2.4M rows is the slowest part of this payload, so `analyze`
+        # passes the figure it already knows
+        "readings": Reading.objects.count() if reading_count is None else reading_count,
+        "states": qs.values("state").distinct().count(),
+        "districts": qs.values("state", "district").distinct().count(),
+        "worst": _jsonable(ranked.order_by("-trend_m_per_year").values(*LIST_FIELDS)[:10]),
+        "best": _jsonable(ranked.order_by("trend_m_per_year").values(*LIST_FIELDS)[:10]),
+    }
 
 
 @api_view(["GET"])
@@ -187,7 +213,16 @@ def trend(request):
     recovery. Averaging each reading's deviation from its own station's mean
     cancels that out, so the curve only moves when water levels move.
     """
-    qs = _clean(_filtered(request)).filter(mean_level_mbgl__isnull=False)
+    if not _has_filters(request):
+        cached = _snapshot("trend")
+        if cached is not None:
+            return Response(cached)
+    return Response(build_trend(_filtered(request)))
+
+
+def build_trend(qs):
+    """The /trend/ payload. Shared with `analyze`, which precomputes it."""
+    qs = _clean(qs).filter(mean_level_mbgl__isnull=False)
     rows = (
         Reading.objects.filter(station__in=qs)
         .annotate(
@@ -202,17 +237,15 @@ def trend(request):
         )
         .order_by("m")
     )
-    return Response(
-        [
-            {
-                "month": r["m"].isoformat(),
-                "anomaly_m": round(r["anomaly"], 3),
-                "level_mbgl": round(r["level"], 3),
-                "stations": r["stations"],
-            }
-            for r in rows
-        ]
-    )
+    return [
+        {
+            "month": r["m"].isoformat(),
+            "anomaly_m": round(r["anomaly"], 3),
+            "level_mbgl": round(r["level"], 3),
+            "stations": r["stations"],
+        }
+        for r in rows
+    ]
 
 
 @api_view(["GET"])

@@ -60,6 +60,23 @@ class Station(models.Model):
         return f"{self.code} - {self.name}"
 
 
+class Snapshot(models.Model):
+    """Precomputed API payloads, refreshed by `manage.py analyze`.
+
+    The national trend series scans every reading - 28 seconds against a hosted
+    Postgres. That is survivable behind a warm in-process cache but not on
+    serverless, where each invocation starts cold. These figures only change
+    when analyze reruns, so compute them there and let the API read one row.
+    """
+
+    key = models.CharField(max_length=40, unique=True)
+    payload = models.JSONField()
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.key} @ {self.updated:%Y-%m-%d %H:%M}"
+
+
 class Reading(models.Model):
     """Daily median water level for a station (source data is 6-hourly)."""
 

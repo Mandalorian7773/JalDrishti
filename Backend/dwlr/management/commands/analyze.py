@@ -5,7 +5,8 @@ from django.core.management.base import BaseCommand
 from django.db.models import Max
 
 from dwlr.analytics import analyse
-from dwlr.models import Reading, Station
+from dwlr.models import Reading, Snapshot, Station
+from dwlr.views import build_summary, build_trend
 
 UPDATE_FIELDS = [
     "latest_level_mbgl", "latest_date", "mean_level_mbgl", "min_level_mbgl",
@@ -50,3 +51,14 @@ class Command(BaseCommand):
         counts = {c: sum(s.category == c for s in stations) for c in
                   ("safe", "semi_critical", "critical", "over_exploited", "unknown")}
         self.stdout.write(f"analysed {len(stations)} stations: {counts}")
+
+        # Precompute the two payloads that scan the readings table. Doing it here
+        # keeps them off the request path, where a cold serverless invocation has
+        # no warm cache to hide a 28-second query behind.
+        reading_count = Reading.objects.count()
+        for key, payload in (
+            ("summary", build_summary(Station.objects.all(), reading_count=reading_count)),
+            ("trend", build_trend(Station.objects.all())),
+        ):
+            Snapshot.objects.update_or_create(key=key, defaults={"payload": payload})
+            self.stdout.write(f"snapshot '{key}' refreshed")
