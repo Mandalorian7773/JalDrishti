@@ -1,18 +1,112 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { CATEGORY_META, Category } from '@/constants/api';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  CheckCircle2,
+  HelpCircle,
+  TrendingDown,
+  TrendingUp,
+  WifiOff,
+} from '@/components/Icons';
+import { ANOMALY_LABEL, CATEGORY_META, Category } from '@/constants/api';
 import tw from '@/constants/tailwind';
 
-export const Card = ({ children, style }: { children: React.ReactNode; style?: any }) => (
-  <View style={[tw`bg-white rounded-2xl p-4 border border-slate-200`, style]}>{children}</View>
+export const Card = ({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: any;
+}) => (
+  <View
+    style={[
+      tw`bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs`,
+      {
+        boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02)',
+      },
+      style,
+    ]}>
+    {children}
+  </View>
 );
 
-export const SectionTitle = ({ title, action }: { title: string; action?: React.ReactNode }) => (
-  <View style={tw`flex-row items-center justify-between mt-6 mb-3`}>
-    <Text style={tw`text-base font-bold text-slate-900`}>{title}</Text>
+export const GlassCard = ({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: any;
+}) => (
+  <View
+    style={[
+      tw`bg-slate-900 rounded-2xl p-4.5 border border-slate-800 shadow-md`,
+      style,
+    ]}>
+    {children}
+  </View>
+);
+
+export const SectionTitle = ({
+  title,
+  subtitle,
+  action,
+  icon: IconComponent,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  icon?: any;
+}) => (
+  <View style={tw`flex-row items-center justify-between mt-5 mb-2.5`}>
+    <View style={tw`flex-1 mr-2`}>
+      <View style={tw`flex-row items-center`}>
+        {IconComponent && (
+          <View style={tw`w-5.5 h-5.5 rounded-lg bg-sky-500/10 items-center justify-center mr-2 border border-sky-500/20`}>
+            {typeof IconComponent === 'function' ? (
+              <IconComponent size={12} color="#0284c7" strokeWidth={2} />
+            ) : (
+              <Activity size={12} color="#0284c7" strokeWidth={2} />
+            )}
+          </View>
+        )}
+        <Text style={tw`text-sm font-semibold text-slate-900 tracking-tight`}>{title}</Text>
+      </View>
+      {subtitle && (
+        <Text style={tw`text-[11px] text-slate-500 mt-0.5 font-normal`}>{subtitle}</Text>
+      )}
+    </View>
     {action}
+  </View>
+);
+
+export const PulseBadge = ({
+  label = 'Live Telemetry',
+  active = true,
+}: {
+  label?: string;
+  active?: boolean;
+}) => (
+  <View
+    style={tw`flex-row items-center bg-white border border-slate-200 rounded-full px-2.5 py-0.5 shadow-2xs`}>
+    <View
+      style={[
+        tw`w-1.5 h-1.5 rounded-full mr-1.5`,
+        { backgroundColor: active ? '#0284c7' : '#94a3b8' },
+      ]}
+    />
+    <Text style={tw`text-[10px] font-medium text-slate-700 tracking-wide`}>{label}</Text>
+  </View>
+);
+
+export const BlueBadge = ({ label }: { label: string }) => (
+  <View style={tw`bg-sky-50 border border-sky-200/80 rounded-full px-2.5 py-0.5`}>
+    <Text style={tw`text-[9px] font-semibold text-sky-700 uppercase tracking-wider`}>
+      {label}
+    </Text>
   </View>
 );
 
@@ -20,9 +114,11 @@ export const Stat = ({
   label,
   value,
   unit,
-  icon,
-  tint = '#0ea5e9',
+  icon: IconComponent,
+  tint = '#0284c7',
   hint,
+  delta,
+  style,
 }: {
   label: string;
   value: string;
@@ -30,33 +126,100 @@ export const Stat = ({
   icon: any;
   tint?: string;
   hint?: string;
+  delta?: { text: string; good: boolean };
+  style?: any;
 }) => (
-  <Card style={tw`flex-1 min-w-[46%] m-1`}>
-    <View style={tw`flex-row items-center mb-2`}>
-      <View style={[tw`w-7 h-7 rounded-lg items-center justify-center mr-2`, { backgroundColor: `${tint}1a` }]}>
-        <Ionicons name={icon} size={16} color={tint} />
-      </View>
-      <Text style={tw`text-xs text-slate-500 flex-1`} numberOfLines={2}>
+  <View
+    style={[
+      tw`bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs`,
+      {
+        boxShadow: '0 1px 2px 0 rgba(15, 23, 42, 0.03)',
+      },
+      style,
+    ]}>
+    <View style={tw`flex-row items-center justify-between mb-1.5`}>
+      <Text style={tw`text-[11px] font-medium text-slate-500 flex-1 pr-1`} numberOfLines={1}>
         {label}
       </Text>
+      <View
+        style={[
+          tw`w-6 h-6 rounded-lg items-center justify-center border`,
+          {
+            backgroundColor: `${tint}12`,
+            borderColor: `${tint}25`,
+          },
+        ]}>
+        {typeof IconComponent === 'function' ? (
+          <IconComponent size={12} color={tint} strokeWidth={2} />
+        ) : (
+          <Activity size={12} color={tint} strokeWidth={2} />
+        )}
+      </View>
     </View>
     <View style={tw`flex-row items-baseline`}>
-      <Text style={tw`text-xl font-bold text-slate-900`}>{value}</Text>
-      {!!unit && <Text style={tw`text-xs text-slate-500 ml-1`}>{unit}</Text>}
+      <Text style={tw`text-lg font-bold text-slate-900 tracking-tight`}>{value}</Text>
+      {!!unit && <Text style={tw`text-[11px] font-medium text-slate-500 ml-1`}>{unit}</Text>}
     </View>
-    {!!hint && <Text style={tw`text-[11px] text-slate-400 mt-1`}>{hint}</Text>}
-  </Card>
+    <View style={tw`flex-row items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100`}>
+      {delta ? (
+        <View
+          style={[
+            tw`flex-row items-center rounded px-1.5 py-0.5`,
+            delta.good ? tw`bg-emerald-50 border border-emerald-200/60` : tw`bg-rose-50 border border-rose-200/60`,
+          ]}>
+          {delta.good ? (
+            <TrendingUp size={10} color="#059669" strokeWidth={2.5} />
+          ) : (
+            <TrendingDown size={10} color="#e11d48" strokeWidth={2.5} />
+          )}
+          <Text
+            style={[
+              tw`text-[9px] font-semibold ml-1`,
+              delta.good ? tw`text-emerald-700` : tw`text-rose-700`,
+            ]}>
+            {delta.text}
+          </Text>
+        </View>
+      ) : null}
+      {!!hint && (
+        <Text style={tw`text-[9px] text-slate-400 font-normal flex-1 ${delta ? 'ml-1.5 text-right' : ''}`} numberOfLines={1}>
+          {hint}
+        </Text>
+      )}
+    </View>
+  </View>
 );
 
-export const CategoryPill = ({ category, small }: { category: Category; small?: boolean }) => {
+export const CategoryPill = ({
+  category,
+  small,
+}: {
+  category: Category;
+  small?: boolean;
+}) => {
   const meta = CATEGORY_META[category] ?? CATEGORY_META.unknown;
   return (
     <View
       style={[
-        tw`rounded-full ${small ? 'px-2 py-0.5' : 'px-3 py-1'}`,
-        { backgroundColor: `${meta.color}1a` },
+        tw`rounded-full border flex-row items-center ${
+          small ? 'px-2 py-0.5' : 'px-2.5 py-1'
+        }`,
+        {
+          backgroundColor: `${meta.color}15`,
+          borderColor: `${meta.color}35`,
+        },
       ]}>
-      <Text style={[tw`${small ? 'text-[10px]' : 'text-xs'} font-semibold`, { color: meta.color }]}>
+      <View
+        style={[
+          tw`w-1.5 h-1.5 rounded-full mr-1.5`,
+          { backgroundColor: meta.color },
+        ]}
+      />
+      <Text
+        style={[
+          tw`${small ? 'text-[10px]' : 'text-xs'} font-semibold tracking-tight`,
+          { color: meta.color },
+        ]}>
         {meta.label}
       </Text>
     </View>
@@ -65,76 +228,143 @@ export const CategoryPill = ({ category, small }: { category: Category; small?: 
 
 export const TrendBadge = ({ value }: { value: number | null }) => {
   if (value === null || value === undefined)
-    return <Text style={tw`text-xs text-slate-400`}>no trend</Text>;
+    return <Text style={tw`text-xs text-slate-400 font-normal`}>no trend</Text>;
   const declining = value > 0;
   const color = declining ? '#dc2626' : '#16a34a';
   return (
-    <View style={tw`flex-row items-center`}>
-      <Ionicons name={declining ? 'arrow-down' : 'arrow-up'} size={13} color={color} />
-      <Text style={[tw`text-xs font-semibold ml-0.5`, { color }]}>
-        {Math.abs(value).toFixed(2)} m/yr {declining ? 'falling' : 'rising'}
+    <View
+      style={[
+        tw`flex-row items-center rounded-lg px-2 py-0.5 border`,
+        declining
+          ? tw`bg-rose-50 border-rose-200/70`
+          : tw`bg-emerald-50 border-emerald-200/70`,
+      ]}>
+      {declining ? (
+        <ArrowDown size={11} color={color} strokeWidth={2.5} />
+      ) : (
+        <ArrowUp size={11} color={color} strokeWidth={2.5} />
+      )}
+      <Text style={[tw`text-xs font-semibold ml-1`, { color }]}>
+        {Math.abs(value).toFixed(2)} m/yr {declining ? 'fall' : 'rise'}
       </Text>
     </View>
   );
 };
 
-export const Loading = ({ label = 'Loading…' }: { label?: string }) => (
-  <View style={tw`flex-1 items-center justify-center py-16`}>
-    <ActivityIndicator size="large" color="#0ea5e9" />
-    <Text style={tw`mt-3 text-slate-500`}>{label}</Text>
+export const AnomalyBadge = ({ anomaly }: { anomaly: string }) => (
+  <View
+    style={tw`flex-row items-center bg-sky-50 border border-sky-200/70 rounded-md px-2 py-0.5 mr-1.5 mt-1`}>
+    <AlertTriangle size={11} color="#0284c7" strokeWidth={2} />
+    <Text style={tw`text-[10px] font-medium text-sky-800 ml-1`}>
+      {ANOMALY_LABEL[anomaly] ?? anomaly}
+    </Text>
   </View>
 );
 
-export const ErrorState = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
-  <Card style={tw`m-4 items-center`}>
-    <Ionicons name="cloud-offline" size={30} color="#dc2626" />
-    <Text style={tw`mt-2 text-center text-slate-700 font-semibold`}>Cannot reach the API</Text>
-    <Text style={tw`mt-1 text-center text-xs text-slate-500`}>{message}</Text>
-    <Text style={tw`mt-2 text-center text-[11px] text-slate-400`}>
-      Start it with: python manage.py runserver 0.0.0.0:8000
+export const Loading = ({ label = 'Loading DWLR telemetry feed…' }: { label?: string }) => (
+  <View style={tw`flex-1 items-center justify-center py-20 bg-slate-50`}>
+    <View style={tw`w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200/80 items-center justify-center mb-3 shadow-2xs`}>
+      <ActivityIndicator size="small" color="#0284c7" />
+    </View>
+    <Text style={tw`text-sm font-semibold text-slate-800`}>{label}</Text>
+    <Text style={tw`text-xs text-slate-400 mt-1 font-normal`}>
+      Central Ground Water Board • India-WRIS Telemetry Engine
     </Text>
+  </View>
+);
+
+export const ErrorState = ({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) => (
+  <Card style={tw`m-4 items-center p-6 bg-rose-50/50 border-rose-200`}>
+    <View style={tw`w-12 h-12 rounded-2xl bg-rose-100 items-center justify-center mb-3`}>
+      <WifiOff size={24} color="#dc2626" strokeWidth={2} />
+    </View>
+    <Text style={tw`text-base text-center text-slate-900 font-bold`}>
+      Telemetry Feed Offline
+    </Text>
+    <Text style={tw`mt-1 text-center text-xs text-slate-600 max-w-md leading-5 font-normal`}>
+      {message}
+    </Text>
+    <View style={tw`mt-3 bg-white/90 border border-slate-200 rounded-lg px-3 py-1.5`}>
+      <Text style={tw`text-[11px] text-slate-600 font-mono`}>
+        python manage.py runserver 0.0.0.0:8000
+      </Text>
+    </View>
     {onRetry && (
-      <Pressable onPress={onRetry} style={tw`mt-3 bg-sky-600 px-4 py-2 rounded-lg`}>
-        <Text style={tw`text-white font-semibold`}>Retry</Text>
+      <Pressable
+        onPress={onRetry}
+        style={tw`mt-4 bg-sky-600 hover:bg-sky-700 px-5 py-2.5 rounded-xl shadow-sm`}>
+        <Text style={tw`text-white text-xs font-semibold`}>Retry Connection</Text>
       </Pressable>
     )}
   </Card>
 );
 
-export const Empty = ({ label }: { label: string }) => (
-  <View style={tw`items-center py-10`}>
-    <Ionicons name="water-outline" size={28} color="#cbd5e1" />
-    <Text style={tw`text-slate-400 mt-2 text-sm`}>{label}</Text>
+export const Empty = ({
+  label,
+}: {
+  label: string;
+  icon?: any;
+}) => (
+  <View style={tw`items-center py-12 px-4`}>
+    <View style={tw`w-12 h-12 rounded-2xl bg-slate-100 items-center justify-center mb-2`}>
+      <HelpCircle size={22} color="#94a3b8" strokeWidth={1.75} />
+    </View>
+    <Text style={tw`text-slate-500 text-sm font-normal text-center`}>{label}</Text>
   </View>
 );
 
-/** Horizontal proportional bar, one segment per category. */
+/** Horizontal proportional category distribution bar */
 export const CategoryBar = ({ counts }: { counts: Record<string, number> }) => {
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-  const order: Category[] = ['safe', 'semi_critical', 'critical', 'over_exploited', 'unknown'];
+  const order: Category[] = [
+    'safe',
+    'semi_critical',
+    'critical',
+    'over_exploited',
+    'unknown',
+  ];
   return (
     <View>
-      <View style={tw`flex-row h-3 rounded-full overflow-hidden bg-slate-100`}>
+      <View style={tw`flex-row h-2 rounded-full overflow-hidden bg-slate-100`}>
         {order.map((c) =>
           counts[c] ? (
             <View
               key={c}
-              style={[{ flex: counts[c] / total, backgroundColor: CATEGORY_META[c].color }]}
+              style={[
+                {
+                  flex: counts[c] / total,
+                  backgroundColor: CATEGORY_META[c].color,
+                },
+              ]}
             />
           ) : null
         )}
       </View>
       <View style={tw`flex-row flex-wrap mt-3`}>
-        {order.map((c) => (
-          <View key={c} style={tw`flex-row items-center mr-4 mb-1`}>
-            <View
-              style={[tw`w-2.5 h-2.5 rounded-full mr-1.5`, { backgroundColor: CATEGORY_META[c].color }]}
-            />
-            <Text style={tw`text-xs text-slate-600`}>
-              {CATEGORY_META[c].label} {counts[c] ?? 0}
-            </Text>
-          </View>
-        ))}
+        {order.map((c) => {
+          const count = counts[c] ?? 0;
+          const pct = Math.round((count / total) * 100);
+          return (
+            <View key={c} style={tw`flex-row items-center mr-3.5 mb-1.5`}>
+              <View
+                style={[
+                  tw`w-2 h-2 rounded-full mr-1.5`,
+                  { backgroundColor: CATEGORY_META[c].color },
+                ]}
+              />
+              <Text style={tw`text-[11px] font-normal text-slate-700`}>
+                {CATEGORY_META[c].label} <Text style={tw`font-semibold text-slate-900`}>{count}</Text>
+                <Text style={tw`text-slate-400 text-[9px]`}> ({pct}%)</Text>
+              </Text>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
