@@ -52,6 +52,17 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "get_state_rankings",
+            "description": (
+                "Get a list of all Indian states ranked by their average groundwater depletion trend. "
+                "Use this to find the most exploited (highest depletion rate) and least exploited states."
+            ),
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_state_summary",
             "description": (
                 "Get groundwater summary for a specific Indian state: station count, "
@@ -181,6 +192,35 @@ def tool_get_national_summary():
     }
 
 
+def tool_get_state_rankings():
+    # Use the same exclusion logic as the dashboard for consistency
+    qs = Station.objects.exclude(anomalies__icontains="flatline").exclude(
+        anomalies__icontains="out_of_range").exclude(anomalies__icontains="suspect_trend")
+    rows = (
+        qs.values("state")
+        .annotate(
+            stations=Count("id"),
+            avg_trend=Avg("trend_m_per_year"),
+            avg_level=Avg("latest_level_mbgl"),
+            at_risk=Count("id", filter=Q(category__in=("critical", "over_exploited"))),
+        )
+        .order_by("-avg_trend")
+    )
+    return {
+        "count": len(rows),
+        "states": [
+            {
+                "state": r["state"],
+                "avg_trend_m_per_year": _round(r["avg_trend"]),
+                "avg_level_mbgl": _round(r["avg_level"]),
+                "stations": r["stations"],
+                "at_risk_stations": r["at_risk"],
+            }
+            for r in rows
+        ]
+    }
+
+
 def tool_get_state_summary(state: str):
     qs = Station.objects.filter(state__iexact=state)
     if not qs.exists():
@@ -290,6 +330,7 @@ def tool_search_stations(query: str):
 
 TOOL_MAP = {
     "get_national_summary": lambda _: tool_get_national_summary(),
+    "get_state_rankings": lambda _: tool_get_state_rankings(),
     "get_state_summary": lambda a: tool_get_state_summary(**a),
     "get_district_stations": lambda a: tool_get_district_stations(**a),
     "get_station_detail": lambda a: tool_get_station_detail(**a),
