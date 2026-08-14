@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   View,
+  Image,
 } from 'react-native';
 
 import { Droplet, MessageCircle, Send, X } from '@/components/Icons';
@@ -194,18 +195,19 @@ export default function ChatBot() {
             borderBottomColor: '#1e293b',
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 10,
-                backgroundColor: '#0284c7',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 10,
-              }}>
-              <Droplet size={18} color="#fff" />
-            </View>
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  backgroundColor: '#fff',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 10,
+                  overflow: 'hidden',
+                }}>
+                <Image source={require('../assets/images/logo.png')} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              </View>
             <View>
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>
                 JalDrishti AI
@@ -303,12 +305,13 @@ export default function ChatBot() {
                       width: 20,
                       height: 20,
                       borderRadius: 6,
-                      backgroundColor: '#0284c7',
+                      backgroundColor: '#fff',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 6,
+                      overflow: 'hidden',
                     }}>
-                    <Droplet size={11} color="#fff" />
+                    <Image source={require('../assets/images/logo.png')} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                   </View>
                   <Text style={{ color: '#64748b', fontSize: 11, fontWeight: '600' }}>
                     JalDrishti AI

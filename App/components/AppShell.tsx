@@ -1,6 +1,6 @@
 import { router, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions, Image } from 'react-native';
 
 import {
   AlertTriangle,
@@ -130,8 +130,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <View>
           {/* Logo & Brand Header */}
           <View style={tw`flex-row items-center px-1 mb-6`}>
-            <View style={tw`w-9 h-9 rounded-xl bg-sky-500 items-center justify-center shadow-md shadow-sky-500/30`}>
-              <Droplets size={19} color="#fff" strokeWidth={2} />
+            <View style={tw`w-9 h-9 rounded-xl bg-white items-center justify-center shadow-md shadow-sky-500/30 overflow-hidden`}>
+              <Image source={require('../assets/images/logo.png')} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
             </View>
             {!collapsed && (
               <View style={tw`ml-2.5 flex-1`}>
