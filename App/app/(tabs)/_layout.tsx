@@ -9,6 +9,7 @@ import {
   Map,
   TrendingUp,
 } from '@/components/Icons';
+import { useTheme } from '@/constants/ThemeContext';
 
 const TABS = [
   { name: 'index', title: 'Dashboard', icon: LayoutDashboard },
@@ -20,19 +21,20 @@ const TABS = [
 
 export default function TabLayout() {
   const wide = useWideLayout();
+  const { colors } = useTheme();
 
   return (
     <AppShell>
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: '#0284c7',
-          tabBarInactiveTintColor: '#64748b',
+          tabBarActiveTintColor: colors.brightBlue,
+          tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: wide
             ? { display: 'none' }
             : {
-                backgroundColor: '#ffffff',
-                borderTopColor: '#e2e8f0',
+                backgroundColor: colors.bgSidebar,
+                borderTopColor: colors.borderColor,
                 height: 60,
                 paddingBottom: 8,
                 paddingTop: 6,

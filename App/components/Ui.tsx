@@ -6,12 +6,12 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
-  CheckCircle2,
   HelpCircle,
   TrendingDown,
   TrendingUp,
   WifiOff,
 } from '@/components/Icons';
+import { useTheme } from '@/constants/ThemeContext';
 import { ANOMALY_LABEL, CATEGORY_META, Category } from '@/constants/api';
 import tw from '@/constants/tailwind';
 
@@ -21,18 +21,22 @@ export const Card = ({
 }: {
   children: React.ReactNode;
   style?: any;
-}) => (
-  <View
-    style={[
-      tw`bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs`,
-      {
-        boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02)',
-      },
-      style,
-    ]}>
-    {children}
-  </View>
-);
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={[
+        tw`rounded-2xl p-3.5 border shadow-2xs`,
+        {
+          backgroundColor: colors.cardBg,
+          borderColor: colors.borderColor,
+        },
+        style,
+      ]}>
+      {children}
+    </View>
+  );
+};
 
 export const GlassCard = ({
   children,
@@ -40,15 +44,22 @@ export const GlassCard = ({
 }: {
   children: React.ReactNode;
   style?: any;
-}) => (
-  <View
-    style={[
-      tw`bg-slate-900 rounded-2xl p-4.5 border border-slate-800 shadow-md`,
-      style,
-    ]}>
-    {children}
-  </View>
-);
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={[
+        tw`rounded-2xl p-4.5 border shadow-sm`,
+        {
+          backgroundColor: colors.glassBg,
+          borderColor: colors.borderColor,
+        },
+        style,
+      ]}>
+      {children}
+    </View>
+  );
+};
 
 export const SectionTitle = ({
   title,
@@ -60,28 +71,46 @@ export const SectionTitle = ({
   subtitle?: string;
   action?: React.ReactNode;
   icon?: any;
-}) => (
-  <View style={tw`flex-row items-center justify-between mt-5 mb-2.5`}>
-    <View style={tw`flex-1 mr-2`}>
-      <View style={tw`flex-row items-center`}>
-        {IconComponent && (
-          <View style={tw`w-5.5 h-5.5 rounded-lg bg-blue-600/10 items-center justify-center mr-2 border border-blue-600/20`}>
-            {typeof IconComponent === 'function' ? (
-              <IconComponent size={12} color="#2563eb" strokeWidth={2} />
-            ) : (
-              <Activity size={12} color="#2563eb" strokeWidth={2} />
-            )}
-          </View>
+}) => {
+  const { colors, isDark } = useTheme();
+  return (
+    <View style={tw`flex-row items-center justify-between mt-5 mb-2.5`}>
+      <View style={tw`flex-1 mr-2`}>
+        <View style={tw`flex-row items-center`}>
+          {IconComponent && (
+            <View
+              style={[
+                tw`w-5.5 h-5.5 rounded-lg items-center justify-center mr-2 border`,
+                {
+                  backgroundColor: isDark ? 'rgba(47, 128, 255, 0.12)' : 'rgba(37, 99, 235, 0.08)',
+                  borderColor: isDark ? 'rgba(47, 128, 255, 0.25)' : 'rgba(37, 99, 235, 0.2)',
+                },
+              ]}>
+              {typeof IconComponent === 'function' ? (
+                <IconComponent size={12} color={colors.brightBlue} strokeWidth={2} />
+              ) : (
+                <Activity size={12} color={colors.brightBlue} strokeWidth={2} />
+              )}
+            </View>
+          )}
+          <Text
+            style={[
+              tw`text-sm font-semibold tracking-tight`,
+              { color: colors.textPrimary },
+            ]}>
+            {title}
+          </Text>
+        </View>
+        {subtitle && (
+          <Text style={[tw`text-[11px] mt-0.5 font-normal`, { color: colors.textMuted }]}>
+            {subtitle}
+          </Text>
         )}
-        <Text style={tw`text-sm font-semibold text-slate-900 tracking-tight`}>{title}</Text>
       </View>
-      {subtitle && (
-        <Text style={tw`text-[11px] text-slate-500 mt-0.5 font-normal`}>{subtitle}</Text>
-      )}
+      {action}
     </View>
-    {action}
-  </View>
-);
+  );
+};
 
 export const PulseBadge = ({
   label = 'Live Telemetry',
@@ -89,33 +118,54 @@ export const PulseBadge = ({
 }: {
   label?: string;
   active?: boolean;
-}) => (
-  <View
-    style={tw`flex-row items-center bg-white border border-slate-200/90 rounded-full px-2.5 py-0.5 shadow-2xs`}>
+}) => {
+  const { colors, isDark } = useTheme();
+  return (
     <View
       style={[
-        tw`w-1.5 h-1.5 rounded-full mr-1.5`,
-        { backgroundColor: active ? '#2563eb' : '#94a3b8' },
-      ]}
-    />
-    <Text style={tw`text-[10px] font-medium text-slate-700 tracking-wide`}>{label}</Text>
-  </View>
-);
+        tw`flex-row items-center border rounded-full px-2.5 py-0.5 shadow-2xs`,
+        {
+          backgroundColor: colors.bgPanel,
+          borderColor: colors.borderColor,
+        },
+      ]}>
+      <View
+        style={[
+          tw`w-1.5 h-1.5 rounded-full mr-1.5`,
+          { backgroundColor: active ? colors.primaryBlue : colors.textMuted },
+        ]}
+      />
+      <Text style={[tw`text-[10px] font-medium tracking-wide`, { color: colors.textPrimary }]}>
+        {label}
+      </Text>
+    </View>
+  );
+};
 
-export const BlueBadge = ({ label }: { label: string }) => (
-  <View style={tw`bg-blue-50 border border-blue-200/80 rounded-full px-2.5 py-0.5`}>
-    <Text style={tw`text-[9px] font-semibold text-blue-700 uppercase tracking-wider`}>
-      {label}
-    </Text>
-  </View>
-);
+export const BlueBadge = ({ label }: { label: string }) => {
+  const { colors, isDark } = useTheme();
+  return (
+    <View
+      style={[
+        tw`border rounded-full px-2.5 py-0.5`,
+        {
+          backgroundColor: isDark ? 'rgba(47, 128, 255, 0.12)' : 'rgba(37, 99, 235, 0.08)',
+          borderColor: colors.borderColor,
+        },
+      ]}>
+      <Text style={[tw`text-[9px] font-semibold uppercase tracking-wider`, { color: colors.brightBlue }]}>
+        {label}
+      </Text>
+    </View>
+  );
+};
 
 export const Stat = ({
   label,
   value,
   unit,
   icon: IconComponent,
-  tint = '#2563eb',
+  tint,
   hint,
   delta,
   style,
@@ -128,67 +178,99 @@ export const Stat = ({
   hint?: string;
   delta?: { text: string; good: boolean };
   style?: any;
-}) => (
-  <View
-    style={[
-      tw`bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs`,
-      {
-        boxShadow: '0 1px 2px 0 rgba(15, 23, 42, 0.03)',
-      },
-      style,
-    ]}>
-    <View style={tw`flex-row items-center justify-between mb-1.5`}>
-      <Text style={tw`text-[11px] font-medium text-slate-500 flex-1 pr-1`} numberOfLines={1}>
-        {label}
-      </Text>
+}) => {
+  const { colors, isDark } = useTheme();
+  const iconTint = tint ?? colors.primaryBlue;
+
+  return (
+    <View
+      style={[
+        tw`rounded-xl p-3 border shadow-2xs`,
+        {
+          backgroundColor: colors.cardBg,
+          borderColor: colors.borderColor,
+        },
+        style,
+      ]}>
+      <View style={tw`flex-row items-center justify-between mb-1.5`}>
+        <Text
+          style={[tw`text-[11px] font-medium flex-1 pr-1`, { color: colors.textMuted }]}
+          numberOfLines={1}>
+          {label}
+        </Text>
+        <View
+          style={[
+            tw`w-6 h-6 rounded-lg items-center justify-center border`,
+            {
+              backgroundColor: `${iconTint}18`,
+              borderColor: `${iconTint}35`,
+            },
+          ]}>
+          {typeof IconComponent === 'function' ? (
+            <IconComponent size={12} color={iconTint} strokeWidth={2} />
+          ) : (
+            <Activity size={12} color={iconTint} strokeWidth={2} />
+          )}
+        </View>
+      </View>
+      <View style={tw`flex-row items-baseline`}>
+        <Text
+          style={[tw`text-lg font-bold tracking-tight`, { color: colors.textPrimary }]}>
+          {value}
+        </Text>
+        {!!unit && (
+          <Text style={[tw`text-[11px] font-medium ml-1`, { color: colors.textMuted }]}>
+            {unit}
+          </Text>
+        )}
+      </View>
       <View
         style={[
-          tw`w-6 h-6 rounded-lg items-center justify-center border`,
-          {
-            backgroundColor: `${tint}12`,
-            borderColor: `${tint}25`,
-          },
+          tw`flex-row items-center justify-between mt-1.5 pt-1.5 border-t`,
+          { borderColor: colors.borderColor },
         ]}>
-        {typeof IconComponent === 'function' ? (
-          <IconComponent size={12} color={tint} strokeWidth={2} />
-        ) : (
-          <Activity size={12} color={tint} strokeWidth={2} />
+        {delta ? (
+          <View
+            style={[
+              tw`flex-row items-center rounded px-1.5 py-0.5 border`,
+              delta.good
+                ? {
+                    backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+                    borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
+                  }
+                : {
+                    backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)',
+                    borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)',
+                  },
+            ]}>
+            {delta.good ? (
+              <TrendingUp size={10} color={isDark ? '#34d399' : '#059669'} strokeWidth={2.5} />
+            ) : (
+              <TrendingDown size={10} color={isDark ? '#f87171' : '#dc2626'} strokeWidth={2.5} />
+            )}
+            <Text
+              style={[
+                tw`text-[9px] font-semibold ml-1`,
+                { color: delta.good ? (isDark ? '#34d399' : '#059669') : (isDark ? '#f87171' : '#dc2626') },
+              ]}>
+              {delta.text}
+            </Text>
+          </View>
+        ) : null}
+        {!!hint && (
+          <Text
+            style={[
+              tw`text-[9px] font-normal flex-1 ${delta ? 'ml-1.5 text-right' : ''}`,
+              { color: colors.textMuted },
+            ]}
+            numberOfLines={1}>
+            {hint}
+          </Text>
         )}
       </View>
     </View>
-    <View style={tw`flex-row items-baseline`}>
-      <Text style={tw`text-lg font-bold text-slate-900 tracking-tight`}>{value}</Text>
-      {!!unit && <Text style={tw`text-[11px] font-medium text-slate-500 ml-1`}>{unit}</Text>}
-    </View>
-    <View style={tw`flex-row items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100`}>
-      {delta ? (
-        <View
-          style={[
-            tw`flex-row items-center rounded px-1.5 py-0.5`,
-            delta.good ? tw`bg-emerald-50 border border-emerald-200/60` : tw`bg-rose-50 border border-rose-200/60`,
-          ]}>
-          {delta.good ? (
-            <TrendingUp size={10} color="#059669" strokeWidth={2.5} />
-          ) : (
-            <TrendingDown size={10} color="#e11d48" strokeWidth={2.5} />
-          )}
-          <Text
-            style={[
-              tw`text-[9px] font-semibold ml-1`,
-              delta.good ? tw`text-emerald-700` : tw`text-rose-700`,
-            ]}>
-            {delta.text}
-          </Text>
-        </View>
-      ) : null}
-      {!!hint && (
-        <Text style={tw`text-[9px] text-slate-400 font-normal flex-1 ${delta ? 'ml-1.5 text-right' : ''}`} numberOfLines={1}>
-          {hint}
-        </Text>
-      )}
-    </View>
-  </View>
-);
+  );
+};
 
 export const CategoryPill = ({
   category,
@@ -227,17 +309,25 @@ export const CategoryPill = ({
 };
 
 export const TrendBadge = ({ value }: { value: number | null }) => {
+  const { colors, isDark } = useTheme();
   if (value === null || value === undefined)
-    return <Text style={tw`text-xs text-slate-400 font-normal`}>no trend</Text>;
+    return <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>no trend</Text>;
   const declining = value > 0;
-  const color = declining ? '#dc2626' : '#16a34a';
+  const color = declining ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#4ade80' : '#16a34a');
+
   return (
     <View
       style={[
         tw`flex-row items-center rounded-lg px-2 py-0.5 border`,
         declining
-          ? tw`bg-rose-50 border-rose-200/70`
-          : tw`bg-emerald-50 border-emerald-200/70`,
+          ? {
+              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)',
+              borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)',
+            }
+          : {
+              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+              borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
+            },
       ]}>
       {declining ? (
         <ArrowDown size={11} color={color} strokeWidth={2.5} />
@@ -251,27 +341,46 @@ export const TrendBadge = ({ value }: { value: number | null }) => {
   );
 };
 
-export const AnomalyBadge = ({ anomaly }: { anomaly: string }) => (
-  <View
-    style={tw`flex-row items-center bg-blue-50 border border-blue-200/70 rounded-md px-2 py-0.5 mr-1.5 mt-1`}>
-    <AlertTriangle size={11} color="#2563eb" strokeWidth={2} />
-    <Text style={tw`text-[10px] font-medium text-blue-800 ml-1`}>
-      {ANOMALY_LABEL[anomaly] ?? anomaly}
-    </Text>
-  </View>
-);
-
-export const Loading = ({ label = 'Loading DWLR telemetry feed…' }: { label?: string }) => (
-  <View style={tw`flex-1 items-center justify-center py-20 bg-slate-50/50`}>
-    <View style={tw`w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200/80 items-center justify-center mb-3 shadow-2xs`}>
-      <ActivityIndicator size="small" color="#2563eb" />
+export const AnomalyBadge = ({ anomaly }: { anomaly: string }) => {
+  const { colors, isDark } = useTheme();
+  return (
+    <View
+      style={[
+        tw`flex-row items-center border rounded-md px-2 py-0.5 mr-1.5 mt-1`,
+        {
+          backgroundColor: isDark ? 'rgba(47, 128, 255, 0.15)' : 'rgba(37, 99, 235, 0.08)',
+          borderColor: colors.borderColor,
+        },
+      ]}>
+      <AlertTriangle size={11} color={colors.brightBlue} strokeWidth={2} />
+      <Text style={[tw`text-[10px] font-medium ml-1`, { color: colors.brightBlue }]}>
+        {ANOMALY_LABEL[anomaly] ?? anomaly}
+      </Text>
     </View>
-    <Text style={tw`text-sm font-semibold text-slate-800`}>{label}</Text>
-    <Text style={tw`text-xs text-slate-400 mt-1 font-normal`}>
-      Central Ground Water Board • India-WRIS Telemetry Engine
-    </Text>
-  </View>
-);
+  );
+};
+
+export const Loading = ({ label = 'Loading DWLR telemetry feed…' }: { label?: string }) => {
+  const { colors } = useTheme();
+  return (
+    <View style={[tw`flex-1 items-center justify-center py-20`, { backgroundColor: colors.bgCanvas }]}>
+      <View
+        style={[
+          tw`w-12 h-12 rounded-2xl border items-center justify-center mb-3 shadow-2xs`,
+          {
+            backgroundColor: colors.bgPanel,
+            borderColor: colors.borderColor,
+          },
+        ]}>
+        <ActivityIndicator size="small" color={colors.primaryBlue} />
+      </View>
+      <Text style={[tw`text-sm font-semibold`, { color: colors.textPrimary }]}>{label}</Text>
+      <Text style={[tw`text-xs mt-1 font-normal`, { color: colors.textMuted }]}>
+        Central Ground Water Board • India-WRIS Telemetry Engine
+      </Text>
+    </View>
+  );
+};
 
 export const ErrorState = ({
   message,
@@ -279,48 +388,85 @@ export const ErrorState = ({
 }: {
   message: string;
   onRetry?: () => void;
-}) => (
-  <Card style={tw`m-4 items-center p-6 bg-rose-50/50 border-rose-200`}>
-    <View style={tw`w-12 h-12 rounded-2xl bg-rose-100 items-center justify-center mb-3`}>
-      <WifiOff size={24} color="#dc2626" strokeWidth={2} />
-    </View>
-    <Text style={tw`text-base text-center text-slate-900 font-bold`}>
-      Telemetry Feed Offline
-    </Text>
-    <Text style={tw`mt-1 text-center text-xs text-slate-600 max-w-md leading-5 font-normal`}>
-      {message}
-    </Text>
-    <View style={tw`mt-3 bg-white/90 border border-slate-200 rounded-lg px-3 py-1.5`}>
-      <Text style={tw`text-[11px] text-slate-600 font-mono`}>
-        python manage.py runserver 0.0.0.0:8000
+}) => {
+  const { colors, isDark } = useTheme();
+  return (
+    <Card
+      style={[
+        tw`m-4 items-center p-6`,
+        {
+          backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEF2F2',
+          borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : '#FECACA',
+        },
+      ]}>
+      <View
+        style={[
+          tw`w-12 h-12 rounded-2xl items-center justify-center mb-3`,
+          {
+            backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
+          },
+        ]}>
+        <WifiOff size={24} color="#EF4444" strokeWidth={2} />
+      </View>
+      <Text style={[tw`text-base text-center font-bold`, { color: colors.textPrimary }]}>
+        Telemetry Feed Offline
       </Text>
-    </View>
-    {onRetry && (
-      <Pressable
-        onPress={onRetry}
-        style={tw`mt-4 bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl shadow-sm`}>
-        <Text style={tw`text-white text-xs font-semibold`}>Retry Connection</Text>
-      </Pressable>
-    )}
-  </Card>
-);
+      <Text style={[tw`mt-1 text-center text-xs max-w-md leading-5 font-normal`, { color: colors.textMuted }]}>
+        {message}
+      </Text>
+      <View
+        style={[
+          tw`mt-3 border rounded-lg px-3 py-1.5`,
+          {
+            backgroundColor: colors.bgSubtle,
+            borderColor: colors.borderColor,
+          },
+        ]}>
+        <Text style={[tw`text-[11px] font-mono`, { color: colors.textMuted }]}>
+          python manage.py runserver 0.0.0.0:8000
+        </Text>
+      </View>
+      {onRetry && (
+        <Pressable
+          onPress={onRetry}
+          style={[
+            tw`mt-4 px-5 py-2.5 rounded-xl shadow-sm`,
+            { backgroundColor: colors.primaryBlue },
+          ]}>
+          <Text style={tw`text-white text-xs font-semibold`}>Retry Connection</Text>
+        </Pressable>
+      )}
+    </Card>
+  );
+};
 
 export const Empty = ({
   label,
 }: {
   label: string;
   icon?: any;
-}) => (
-  <View style={tw`items-center py-12 px-4`}>
-    <View style={tw`w-12 h-12 rounded-2xl bg-slate-100 items-center justify-center mb-2`}>
-      <HelpCircle size={22} color="#94a3b8" strokeWidth={1.75} />
+}) => {
+  const { colors } = useTheme();
+  return (
+    <View style={tw`items-center py-12 px-4`}>
+      <View
+        style={[
+          tw`w-12 h-12 rounded-2xl border items-center justify-center mb-2`,
+          {
+            backgroundColor: colors.bgSubtle,
+            borderColor: colors.borderColor,
+          },
+        ]}>
+        <HelpCircle size={22} color={colors.textMuted} strokeWidth={1.75} />
+      </View>
+      <Text style={[tw`text-sm font-normal text-center`, { color: colors.textMuted }]}>{label}</Text>
     </View>
-    <Text style={tw`text-slate-500 text-sm font-normal text-center`}>{label}</Text>
-  </View>
-);
+  );
+};
 
 /** Horizontal proportional category distribution bar */
 export const CategoryBar = ({ counts }: { counts: Record<string, number> }) => {
+  const { colors } = useTheme();
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
   const order: Category[] = [
     'safe',
@@ -331,7 +477,14 @@ export const CategoryBar = ({ counts }: { counts: Record<string, number> }) => {
   ];
   return (
     <View>
-      <View style={tw`flex-row h-2 rounded-full overflow-hidden bg-slate-100`}>
+      <View
+        style={[
+          tw`flex-row h-2 rounded-full overflow-hidden border`,
+          {
+            backgroundColor: colors.bgSubtle,
+            borderColor: colors.borderColor,
+          },
+        ]}>
         {order.map((c) =>
           counts[c] ? (
             <View
@@ -358,9 +511,10 @@ export const CategoryBar = ({ counts }: { counts: Record<string, number> }) => {
                   { backgroundColor: CATEGORY_META[c].color },
                 ]}
               />
-              <Text style={tw`text-[11px] font-normal text-slate-700`}>
-                {CATEGORY_META[c].label} <Text style={tw`font-semibold text-slate-900`}>{count}</Text>
-                <Text style={tw`text-slate-400 text-[9px]`}> ({pct}%)</Text>
+              <Text style={[tw`text-[11px] font-normal`, { color: colors.textMuted }]}>
+                {CATEGORY_META[c].label}{' '}
+                <Text style={[tw`font-semibold`, { color: colors.textPrimary }]}>{count}</Text>
+                <Text style={[tw`text-[9px]`, { color: colors.textMuted }]}> ({pct}%)</Text>
               </Text>
             </View>
           );
@@ -369,3 +523,4 @@ export const CategoryBar = ({ counts }: { counts: Record<string, number> }) => {
     </View>
   );
 };
+
