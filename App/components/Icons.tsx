@@ -258,7 +258,10 @@ export const Layers = ({ size = 20, color = '#64748b', strokeWidth = 2, style }:
 );
 
 function Polygon({ points }: { points: string }) {
-  return <Path d={`M${points.replace(/\s+/g, 'L')}Z`} />;
+  // `points` is a flat list of x y x y. Joining on every space makes each
+  // coordinate its own lineto, so the path is rejected and the icon vanishes.
+  const pairs = points.trim().match(/\S+\s+\S+/g) ?? [];
+  return <Path d={`M${pairs.join('L')}Z`} />;
 }
 
 export const Server = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
