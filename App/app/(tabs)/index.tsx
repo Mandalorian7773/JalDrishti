@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Dimensions, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -82,6 +82,9 @@ const StationRow = ({ s, rank }: { s: Station; rank: number }) => (
 
 export default function DashboardScreen() {
   const wide = useWideLayout();
+  // Read here rather than beside chartWidth below: that sits after the early
+  // returns, and a hook cannot run conditionally.
+  const { width } = useWindowDimensions();
   const { data, error, loading, reload } = useApi<Summary>('/summary/');
   const trend = useApi<TrendPoint[]>('/trend/');
 
@@ -113,9 +116,7 @@ export default function DashboardScreen() {
   const s = data;
   const netTrend = s.avg_trend ?? 0;
   const rising = netTrend < 0;
-  const chartWidth = wide
-    ? Math.min(Dimensions.get('window').width - 340, 1140)
-    : Dimensions.get('window').width - 40;
+  const chartWidth = wide ? Math.min(width - 340, 1140) : Math.max(width - 40, 1);
 
   const statCardStyle = tw`${wide ? 'w-[23.5%]' : 'w-[48%]'} m-1`;
 

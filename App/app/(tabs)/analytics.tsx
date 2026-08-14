@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -54,6 +54,9 @@ function thin<T>(rows: T[], n: number): T[] {
 
 export default function AnalyticsScreen() {
   const wide = useWideLayout();
+  // Subscribed, not sampled: Dimensions.get() does not re-render on rotation,
+  // and reads 0 during the web static export, which made the chart negative.
+  const { width } = useWindowDimensions();
   const params = useLocalSearchParams<{ code?: string }>();
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -105,9 +108,7 @@ export default function AnalyticsScreen() {
   }, [detail.data]);
 
   const d = detail.data;
-  const chartWidth = wide
-    ? Math.min(Dimensions.get('window').width - 340, 1140)
-    : Dimensions.get('window').width - 40;
+  const chartWidth = wide ? Math.min(width - 340, 1140) : Math.max(width - 40, 1);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-slate-50/50`} edges={wide ? [] : ['top']}>
