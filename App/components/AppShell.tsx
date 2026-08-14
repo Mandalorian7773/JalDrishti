@@ -1,6 +1,6 @@
 import { router, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
 
 import logo from '@/assets/images/logo.png';
 import {
@@ -67,9 +67,10 @@ export const BREAKPOINT = 960;
 
 export function useWideLayout() {
   const { width } = useWindowDimensions();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted && width >= BREAKPOINT;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return (window.innerWidth || width) >= BREAKPOINT;
+  }
+  return width >= BREAKPOINT;
 }
 
 const NavItem = ({
@@ -87,7 +88,10 @@ const NavItem = ({
     <Pressable
       onPress={() => router.push(item.route as any)}
       style={[
-        tw`flex-row items-center rounded-xl px-3 py-2.5 mb-1.5 transition-all border`,
+        tw`transition-all border`,
+        collapsed
+          ? tw`w-9 h-9 rounded-xl items-center justify-center self-center mb-1.5`
+          : tw`flex-row items-center rounded-xl px-3 py-2.5 mb-1.5`,
         active
           ? {
               backgroundColor: isDark ? 'rgba(47, 128, 255, 0.15)' : 'rgba(37, 99, 235, 0.12)',
@@ -97,7 +101,6 @@ const NavItem = ({
               backgroundColor: 'transparent',
               borderColor: 'transparent',
             },
-        collapsed ? tw`justify-center px-0` : tw``,
       ]}>
       <Icon
         size={17}
@@ -143,7 +146,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         ]}>
         <View>
           {/* Logo & Brand Header */}
-          <View style={tw`flex-row items-center px-1 mb-6`}>
+          <View style={collapsed ? tw`items-center mb-6` : tw`flex-row items-center px-1 mb-6`}>
             <View
               style={[
                 tw`w-9 h-9 rounded-xl items-center justify-center shadow-md overflow-hidden border`,
@@ -203,31 +206,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* User Profile & Theme Toggle & Collapse Toggle */}
         <View>
           {/* Theme Toggle in Sidebar */}
-          <ThemeToggle compact={collapsed} style={tw`mb-2.5 w-full`} />
+          <ThemeToggle compact={collapsed} style={collapsed ? tw`mb-2 w-9 h-9 self-center` : tw`mb-2 w-full`} />
 
           <View style={[tw`h-px my-2`, { backgroundColor: colors.borderColor }]} />
 
           {/* Profile Badge */}
-          <View
-            style={[
-              tw`flex-row items-center px-1.5 py-1.5 mb-2 border rounded-2xl`,
-              {
-                backgroundColor: colors.bgPanel,
-                borderColor: colors.borderColor,
-              },
-            ]}>
+          {collapsed ? (
             <View
               style={[
-                tw`w-8 h-8 rounded-xl border items-center justify-center`,
+                tw`w-9 h-9 rounded-xl border items-center justify-center self-center mb-2`,
                 {
-                  backgroundColor: isDark ? 'rgba(47, 128, 255, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                  backgroundColor: isDark ? 'rgba(47, 128, 255, 0.15)' : 'rgba(37, 99, 235, 0.08)',
                   borderColor: isDark ? 'rgba(47, 128, 255, 0.3)' : 'rgba(37, 99, 235, 0.2)',
                 },
               ]}>
-              <User size={15} color={colors.brightBlue} strokeWidth={2} />
+              <User size={16} color={colors.brightBlue} strokeWidth={2} />
             </View>
-            {!collapsed && (
-              <View style={tw`ml-2 flex-1`}>
+          ) : (
+            <View
+              style={[
+                tw`flex-row items-center px-2 py-2 mb-2 border rounded-xl`,
+                {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.borderColor,
+                },
+              ]}>
+              <View
+                style={[
+                  tw`w-8 h-8 rounded-lg border items-center justify-center mr-2.5`,
+                  {
+                    backgroundColor: isDark ? 'rgba(47, 128, 255, 0.15)' : 'rgba(37, 99, 235, 0.08)',
+                    borderColor: isDark ? 'rgba(47, 128, 255, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                  },
+                ]}>
+                <User size={15} color={colors.brightBlue} strokeWidth={2} />
+              </View>
+              <View style={tw`flex-1`}>
                 <Text
                   style={[tw`text-xs font-semibold`, { color: colors.textPrimary }]}
                   numberOfLines={1}>
@@ -242,16 +256,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   Ministry of Jal Shakti
                 </Text>
               </View>
-            )}
-          </View>
+            </View>
+          )}
 
           {/* Collapse Button */}
           <Pressable
             onPress={() => setCollapsed((c) => !c)}
             style={[
-              tw`mt-1 flex-row items-center justify-center rounded-xl py-1.5 border transition-all`,
+              tw`mt-0.5 flex-row items-center justify-center rounded-xl py-2 border transition-all`,
+              collapsed ? tw`w-9 h-9 self-center` : tw`w-full`,
               {
-                backgroundColor: colors.bgPanel,
+                backgroundColor: colors.cardBg,
                 borderColor: colors.borderColor,
               },
             ]}>

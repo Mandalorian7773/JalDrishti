@@ -97,6 +97,27 @@ const StationRow = ({ s, rank }: { s: Station; rank: number }) => {
   );
 };
 
+const defaultSummary: Summary = {
+  total: 0,
+  avg_trend: null,
+  avg_level: null,
+  avg_recharge: null,
+  avg_fluctuation: null,
+  avg_quality: null,
+  latest: 'Syncing…',
+  by_category: { safe: 0, semi_critical: 0, critical: 0, over_exploited: 0, unknown: 0 },
+  declining: 0,
+  recovering: 0,
+  at_risk: 0,
+  flagged_sensors: 0,
+  readings: 0,
+  states: 0,
+  districts: 0,
+  stations: 0,
+  worst: [],
+  best: [],
+};
+
 export default function DashboardScreen() {
   const wide = useWideLayout();
   const { colors, isDark } = useTheme();
@@ -122,16 +143,15 @@ export default function DashboardScreen() {
     };
   }, [trend.data]);
 
-  if (loading && !data) return <Loading label="Loading national groundwater telemetry…" />;
+  if (loading && !data) return <Loading />;
   if (error && !data)
     return (
       <SafeAreaView style={[tw`flex-1 justify-center`, { backgroundColor: colors.bgCanvas }]}>
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
-  if (!data) return null;
 
-  const s = data;
+  const s = data ?? defaultSummary;
   const netTrend = s.avg_trend ?? 0;
   const rising = netTrend < 0;
   const chartWidth = wide ? Math.min(width - 340, 1140) : Math.max(width - 40, 1);

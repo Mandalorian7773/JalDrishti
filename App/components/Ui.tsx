@@ -1,6 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 
+import logo from '@/assets/images/logo.png';
 import {
   Activity,
   AlertTriangle,
@@ -360,24 +361,13 @@ export const AnomalyBadge = ({ anomaly }: { anomaly: string }) => {
   );
 };
 
-export const Loading = ({ label = 'Loading DWLR telemetry feed…' }: { label?: string }) => {
-  const { colors } = useTheme();
+export const Loading = ({ label }: { label?: string }) => {
   return (
-    <View style={[tw`flex-1 items-center justify-center py-20`, { backgroundColor: colors.bgCanvas }]}>
-      <View
-        style={[
-          tw`w-12 h-12 rounded-2xl border items-center justify-center mb-3 shadow-2xs`,
-          {
-            backgroundColor: colors.bgPanel,
-            borderColor: colors.borderColor,
-          },
-        ]}>
-        <ActivityIndicator size="small" color={colors.primaryBlue} />
-      </View>
-      <Text style={[tw`text-sm font-semibold`, { color: colors.textPrimary }]}>{label}</Text>
-      <Text style={[tw`text-xs mt-1 font-normal`, { color: colors.textMuted }]}>
-        Central Ground Water Board • India-WRIS Telemetry Engine
-      </Text>
+    <View style={tw`flex-1 items-center justify-center bg-white`}>
+      <ActivityIndicator size="large" color="#2563EB" />
+      {label ? (
+        <Text style={tw`text-xs mt-3 text-slate-500 font-medium`}>{label}</Text>
+      ) : null}
     </View>
   );
 };

@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -99,6 +99,8 @@ export default function AnalyticsScreen() {
     const at = (days: number) => fc[Math.min(Math.round(days / 7) - 1, fc.length - 1)];
     return { d30: at(30), d90: fc[fc.length - 1] };
   }, [detail.data]);
+
+  if (list.loading && !list.data) return <Loading />;
 
   const d = detail.data;
   const chartWidth = wide ? Math.min(width - 340, 1140) : Math.max(width - 40, 1);
@@ -205,7 +207,14 @@ export default function AnalyticsScreen() {
         </ScrollView>
 
         {detail.error && <ErrorState message={detail.error} onRetry={detail.reload} />}
-        {detail.loading && !d && <Loading label="Loading station hydrograph & telemetry series…" />}
+        {detail.loading && !d && (
+          <Card style={tw`mt-4 py-12 items-center justify-center`}>
+            <ActivityIndicator size="small" color={colors.brightBlue} style={tw`mb-2`} />
+            <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>
+              Loading station hydrograph &amp; telemetry series…
+            </Text>
+          </Card>
+        )}
 
         {d && (
           <>

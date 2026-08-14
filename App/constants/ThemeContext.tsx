@@ -90,17 +90,30 @@ const ThemeContext = createContext<ThemeContextType>({
 
 const THEME_STORAGE_KEY = 'jal_drishti_theme';
 
+const getInitialTheme = (): ThemeMode => {
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {
+      /* ignore */
+    }
+  }
+  return 'dark';
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('dark');
+  const [theme, setThemeState] = useState<ThemeMode>(getInitialTheme);
+
+  const colors = theme === 'dark' ? darkThemeColors : lightThemeColors;
+  const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-      const saved = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
-      if (saved === 'light' || saved === 'dark') {
-        setThemeState(saved);
-      }
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.documentElement.style.backgroundColor = isDark ? '#07111F' : '#F4F6F9';
+      document.body.style.backgroundColor = isDark ? '#07111F' : '#F4F6F9';
     }
-  }, []);
+  }, [isDark]);
 
   const setTheme = (mode: ThemeMode) => {
     setThemeState(mode);
@@ -116,9 +129,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
-
-  const colors = theme === 'dark' ? darkThemeColors : lightThemeColors;
-  const isDark = theme === 'dark';
 
   return (
     <ThemeContext.Provider value={{ theme, colors, isDark, toggleTheme, setTheme }}>
