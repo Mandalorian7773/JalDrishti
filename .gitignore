@@ -1,0 +1,21 @@
+# Node
+node_modules/
+.npm/
+.expo/
+dist/
+web-build/
+
+# Python / Django
+*.pyc
+__pycache__/
+venv/
+.venv/
+backend/db.sqlite3
+backend/data/*.jsonl
+*.log
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -56,13 +56,16 @@ def _snapshot(key):
 
 
 def _clean(qs):
-    """Stations whose telemetry passed the quality checks.
+    """Stations whose telemetry passed critical sensor quality checks.
 
-    A stuck or datum-shifted recorder produces trends of tens of metres a year
-    that swamp any average it lands in, so every headline number is computed
-    over clean stations only. The flagged ones surface in /alerts/ instead.
+    Exclude severe sensor defects (flatline, out_of_range, suspect_trend)
+    that distort statistical trends, while keeping valid stations across all states.
     """
-    return qs.filter(anomalies=[])
+    return (
+        qs.exclude(anomalies__icontains="flatline")
+        .exclude(anomalies__icontains="out_of_range")
+        .exclude(anomalies__icontains="suspect_trend")
+    )
 
 
 def _filtered(request):
