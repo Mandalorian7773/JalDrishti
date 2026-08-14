@@ -15,6 +15,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.title = 'JalDrishti';
+
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href =

@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View, useWindowDimensions, Image } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useWideLayout } from '@/components/AppShell';
+import logo from '../../assets/images/logo.png';
 import {
   Activity,
   AlertCircle,
@@ -133,9 +134,14 @@ export default function DashboardScreen() {
               COMMAND DECK
             </Text>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
-              <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
-                JalDrishti
-              </Text>
+              <View style={tw`flex-row items-center`}>
+                <View style={tw`w-7 h-7 mr-2 rounded-md bg-white items-center justify-center shadow-sm shadow-blue-600/20 overflow-hidden`}>
+                  <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                </View>
+                <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
+                  JalDrishti
+                </Text>
+              </View>
               <PulseBadge label="Live Telemetry" />
             </View>
             <Text style={tw`text-xs font-normal text-slate-500 mt-1`}>

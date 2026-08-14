@@ -14,6 +14,7 @@ import {
   User,
 } from '@/components/Icons';
 import tw from '@/constants/tailwind';
+import logo from '../assets/images/logo.png'
 
 const NAV = [
   {
@@ -131,7 +132,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Logo & Brand Header */}
           <View style={tw`flex-row items-center px-1 mb-6`}>
             <View style={tw`w-9 h-9 rounded-xl bg-white items-center justify-center shadow-md shadow-blue-600/30 overflow-hidden`}>
-              <Image source={require('../assets/images/logo.png')} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+              <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
             </View>
             {!collapsed && (
               <View style={tw`ml-2.5 flex-1`}>
@@ -209,9 +210,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-0.5`}>
                 {current.category}
               </Text>
-              <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
-                {current.title}
-              </Text>
+              <View style={tw`flex-row items-center`}>
+                <View style={tw`w-7 h-7 mr-2 rounded-md bg-white items-center justify-center shadow-sm shadow-blue-600/20 overflow-hidden`}>
+                  <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                </View>
+                <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
+                  {current.title}
+                </Text>
+              </View>
               <Text style={tw`text-xs text-slate-500 mt-1 max-w-3xl font-normal leading-relaxed`}>
                 {current.subtitle}
               </Text>
