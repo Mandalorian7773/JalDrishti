@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useWideLayout } from '@/components/AppShell';
@@ -34,7 +34,7 @@ export default function StatesScreen() {
   const rows = (data ?? []).filter((r) => r.stations > 0);
   const worstTrend = Math.max(...rows.map((r) => Math.abs(r.avg_trend ?? 0)), 0.001);
 
-  if (loading && !data) return <Loading label="Evaluating state groundwater benchmarks…" />;
+  if (loading && !data) return <Loading />;
   if (error && !data)
     return (
       <SafeAreaView style={[tw`flex-1 justify-center`, { backgroundColor: colors.bgCanvas }]}>
@@ -70,12 +70,19 @@ export default function StatesScreen() {
 
         {/* State Rankings List */}
         <SectionTitle
-          title={`State Groundwater Vulnerability Index (${rows.length})`}
+          title={`State Groundwater Vulnerability Index (${rows.length ? rows.length : (loading ? '…' : '0')})`}
           subtitle="Ranked from highest rate of depletion to fastest recovering"
           icon={Award}
         />
         <Card style={tw`py-1`}>
-          {rows.length ? (
+          {loading && !data ? (
+            <View style={tw`py-10 items-center justify-center`}>
+              <ActivityIndicator size="small" color={colors.brightBlue} style={tw`mb-2`} />
+              <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>
+                Evaluating state groundwater benchmarks…
+              </Text>
+            </View>
+          ) : rows.length ? (
             rows.map((r, i) => {
               const trend = r.avg_trend ?? 0;
               const declining = trend > 0;

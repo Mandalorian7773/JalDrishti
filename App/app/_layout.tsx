@@ -46,6 +46,11 @@ export default function RootLayout() {
         * {
           font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
         }
+        @media (min-width: 960px) {
+          div[role="tablist"], nav[role="navigation"], [aria-label*="tab"] {
+            display: none !important;
+          }
+        }
       `;
       document.head.appendChild(style);
     }

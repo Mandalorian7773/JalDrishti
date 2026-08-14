@@ -26,12 +26,13 @@ export default function TabLayout() {
   return (
     <AppShell>
       <Tabs
+        tabBar={wide ? () => null : undefined}
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: colors.brightBlue,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: wide
-            ? { display: 'none' }
+            ? { display: 'none', height: 0, opacity: 0 }
             : {
                 backgroundColor: colors.bgSidebar,
                 borderTopColor: colors.borderColor,

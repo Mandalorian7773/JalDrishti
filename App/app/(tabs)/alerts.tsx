@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useWideLayout } from '@/components/AppShell';
@@ -119,7 +119,7 @@ export default function AlertsScreen() {
   const [page, setPage] = useState(1);
   const { data, error, loading, reload } = useApi<Record<Tab, Station[]>>('/alerts/');
 
-  if (loading && !data) return <Loading label="Scanning early warning alerts & sensor diagnostics…" />;
+  if (loading && !data) return <Loading />;
   if (error && !data)
     return (
       <SafeAreaView style={[tw`flex-1 justify-center`, { backgroundColor: colors.bgCanvas }]}>
@@ -273,7 +273,14 @@ export default function AlertsScreen() {
         {/* Paginated Alert List Card */}
         <Card style={tw`p-0 overflow-hidden`}>
           <View style={tw`py-1`}>
-            {paginatedRows.length ? (
+            {loading && !data ? (
+              <View style={tw`py-10 items-center justify-center`}>
+                <ActivityIndicator size="small" color={colors.brightBlue} style={tw`mb-2`} />
+                <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>
+                  Scanning early warning alerts & sensor diagnostics…
+                </Text>
+              </View>
+            ) : paginatedRows.length ? (
               paginatedRows.map((s) => <AlertRow key={s.code} s={s} kind={tab} />)
             ) : (
               <Empty label="No active anomalies flagged in this category" />

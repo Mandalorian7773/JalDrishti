@@ -68,7 +68,7 @@ export default function MapScreen() {
     [all, selectedCode]
   );
 
-  if (loading && !data) return <Loading label="Rendering spatial DWLR telemetry operations network…" />;
+  if (loading && !data) return <Loading />;
   if (error && !data)
     return (
       <SafeAreaView style={[tw`flex-1 justify-center`, { backgroundColor: colors.bgCanvas }]}>
