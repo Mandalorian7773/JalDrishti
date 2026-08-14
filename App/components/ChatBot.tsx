@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import logo from '@/assets/images/logo.png';
 import { Droplet, MessageCircle, Send, X } from '@/components/Icons';
 import { useTheme } from '@/constants/ThemeContext';
 import { API } from '@/constants/api';
@@ -200,16 +202,14 @@ export default function ChatBot() {
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 10,
-                backgroundColor: colors.primaryBlue,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 10,
-              }}>
-              <Droplet size={18} color="#fff" />
+              style={[
+                tw`w-8 h-8 rounded-xl items-center justify-center mr-2.5 overflow-hidden border`,
+                {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.borderColor,
+                },
+              ]}>
+              <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             </View>
             <View>
               <Text style={{ color: colors.textPrimary, fontWeight: '700', fontSize: 14 }}>
@@ -306,16 +306,14 @@ export default function ChatBot() {
                     marginBottom: 4,
                   }}>
                   <View
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 6,
-                      backgroundColor: colors.primaryBlue,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: 6,
-                    }}>
-                    <Droplet size={11} color="#fff" />
+                    style={[
+                      tw`w-5 h-5 rounded-md items-center justify-center mr-1.5 overflow-hidden border`,
+                      {
+                        backgroundColor: colors.cardBg,
+                        borderColor: colors.borderColor,
+                      },
+                    ]}>
+                    <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                   </View>
                   <Text style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600' }}>
                     JalDrishti AI

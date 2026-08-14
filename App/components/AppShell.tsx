@@ -1,13 +1,13 @@
 import { router, usePathname } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
 
+import logo from '@/assets/images/logo.png';
 import {
   AlertTriangle,
   Award,
   ChevronLeft,
   ChevronRight,
-  Droplets,
   LayoutDashboard,
   Map,
   TrendingUp,
@@ -146,10 +146,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <View style={tw`flex-row items-center px-1 mb-6`}>
             <View
               style={[
-                tw`w-9 h-9 rounded-xl items-center justify-center shadow-md`,
-                { backgroundColor: colors.primaryBlue },
+                tw`w-9 h-9 rounded-xl items-center justify-center shadow-md overflow-hidden border`,
+                {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.borderColor,
+                },
               ]}>
-              <Droplets size={19} color="#FFFFFF" strokeWidth={2} />
+              <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
             </View>
             {!collapsed && (
               <View style={tw`ml-2.5 flex-1`}>
@@ -288,13 +291,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ]}>
                 {current.category}
               </Text>
-              <Text
-                style={[
-                  tw`text-2xl font-bold tracking-tight`,
-                  { color: colors.textPrimary },
-                ]}>
-                {current.title}
-              </Text>
+              <View style={tw`flex-row items-center`}>
+                <View
+                  style={[
+                    tw`w-7 h-7 mr-2 rounded-lg items-center justify-center shadow-sm overflow-hidden border`,
+                    {
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.borderColor,
+                    },
+                  ]}>
+                  <Image source={logo} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                </View>
+                <Text
+                  style={[
+                    tw`text-2xl font-bold tracking-tight`,
+                    { color: colors.textPrimary },
+                  ]}>
+                  {current.title}
+                </Text>
+              </View>
               <Text
                 style={[
                   tw`text-xs mt-1 max-w-3xl font-normal leading-relaxed`,
