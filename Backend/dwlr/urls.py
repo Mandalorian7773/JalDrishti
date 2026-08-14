@@ -9,4 +9,5 @@ urlpatterns = [
     path('trend/', views.trend),
     path('states/', views.states),
     path('alerts/', views.alerts),
+    path('chat/', views.chat_view),
 ]

@@ -351,3 +351,16 @@ export const HelpCircle = ({ size = 20, color = '#64748b', strokeWidth = 2, styl
     <Line x1="12" x2="12.01" y1="17" y2="17" />
   </Svg>
 );
+
+export const MessageCircle = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <Path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+  </Svg>
+);
+
+export const Send = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <Path d="m22 2-7 20-4-9-9-4Z" />
+    <Path d="M22 2 11 13" />
+  </Svg>
+);

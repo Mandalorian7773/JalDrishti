@@ -288,3 +288,24 @@ def alerts(request):
             "sensor": list(faulty.values(*LIST_FIELDS)[:100]),
         }
     )
+
+
+@api_view(["POST"])
+def chat_view(request):
+    """AI chatbot endpoint. Expects {"messages": [{"role": "user", "content": "..."}]}."""
+    from .chatbot import chat
+
+    messages = request.data.get("messages", [])
+    if not messages:
+        return Response({"error": "No messages provided"}, status=400)
+
+    # Validate message format
+    for msg in messages:
+        if msg.get("role") not in ("user", "assistant"):
+            return Response({"error": "Invalid message role"}, status=400)
+
+    try:
+        reply = chat(messages)
+        return Response({"reply": reply})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
