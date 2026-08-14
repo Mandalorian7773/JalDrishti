@@ -13,6 +13,8 @@ import {
   TrendingUp,
   User,
 } from '@/components/Icons';
+import ThemeToggle from '@/components/ThemeToggle';
+import { useTheme } from '@/constants/ThemeContext';
 import tw from '@/constants/tailwind';
 
 const NAV = [
@@ -79,27 +81,34 @@ const NavItem = ({
   active: boolean;
   collapsed: boolean;
 }) => {
+  const { colors, isDark } = useTheme();
   const Icon = item.icon;
   return (
     <Pressable
       onPress={() => router.push(item.route as any)}
       style={[
-        tw`flex-row items-center rounded-xl px-3 py-2.5 mb-1.5 transition-all`,
+        tw`flex-row items-center rounded-xl px-3 py-2.5 mb-1.5 transition-all border`,
         active
-          ? tw`bg-blue-600/15 border border-blue-500/35 shadow-2xs`
-          : tw`hover:bg-slate-800/50 border border-transparent`,
+          ? {
+              backgroundColor: isDark ? 'rgba(47, 128, 255, 0.15)' : 'rgba(37, 99, 235, 0.12)',
+              borderColor: isDark ? 'rgba(47, 128, 255, 0.4)' : 'rgba(37, 99, 235, 0.3)',
+            }
+          : {
+              backgroundColor: 'transparent',
+              borderColor: 'transparent',
+            },
         collapsed ? tw`justify-center px-0` : tw``,
       ]}>
       <Icon
         size={17}
-        color={active ? '#60a5fa' : '#94a3b8'}
+        color={active ? colors.brightBlue : colors.textMuted}
         strokeWidth={active ? 2.2 : 1.75}
       />
       {!collapsed && (
         <Text
           style={[
             tw`ml-3 text-xs font-semibold tracking-wide`,
-            active ? tw`text-blue-300` : tw`text-slate-300`,
+            { color: active ? colors.brightBlue : colors.textMuted },
           ]}
           numberOfLines={1}>
           {item.label}
@@ -111,6 +120,7 @@ const NavItem = ({
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const wide = useWideLayout();
+  const { colors, isDark } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -120,25 +130,41 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     NAV.find((n) => n.route !== '/' && pathname.startsWith(n.route)) ?? NAV[0];
 
   return (
-    <View style={tw`flex-1 flex-row bg-[#070d1e]`}>
-      {/* Deep Midnight Sapphire Sidebar Navigation */}
+    <View style={[tw`flex-1 flex-row`, { backgroundColor: colors.bgCanvas }]}>
+      {/* Sidebar Navigation */}
       <View
         style={[
-          tw`bg-[#070d1e] px-3.5 py-5 justify-between border-r border-slate-800/80 relative shadow-lg`,
-          { width: collapsed ? COLLAPSED : EXPANDED },
+          tw`px-3.5 py-5 justify-between relative shadow-lg border-r`,
+          {
+            width: collapsed ? COLLAPSED : EXPANDED,
+            backgroundColor: colors.bgSidebar,
+            borderColor: colors.borderColor,
+          },
         ]}>
         <View>
           {/* Logo & Brand Header */}
           <View style={tw`flex-row items-center px-1 mb-6`}>
-            <View style={tw`w-9 h-9 rounded-xl bg-blue-600 items-center justify-center shadow-md shadow-blue-600/30`}>
-              <Droplets size={19} color="#fff" strokeWidth={2} />
+            <View
+              style={[
+                tw`w-9 h-9 rounded-xl items-center justify-center shadow-md`,
+                { backgroundColor: colors.primaryBlue },
+              ]}>
+              <Droplets size={19} color="#FFFFFF" strokeWidth={2} />
             </View>
             {!collapsed && (
               <View style={tw`ml-2.5 flex-1`}>
-                <Text style={tw`text-white font-bold text-sm tracking-tight`}>
+                <Text
+                  style={[
+                    tw`font-bold text-sm tracking-tight`,
+                    { color: colors.textPrimary },
+                  ]}>
                   JALDRISHTI
                 </Text>
-                <Text style={tw`text-blue-400 text-[10px] font-semibold tracking-[0.18em] uppercase -mt-0.5`}>
+                <Text
+                  style={[
+                    tw`text-[10px] font-semibold tracking-[0.18em] uppercase -mt-0.5`,
+                    { color: colors.brightBlue },
+                  ]}>
                   INTELLIGENCE
                 </Text>
               </View>
@@ -147,7 +173,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Section Header */}
           {!collapsed && (
-            <Text style={tw`text-slate-500 text-[10px] font-semibold px-2 mb-2.5 uppercase tracking-widest`}>
+            <Text
+              style={[
+                tw`text-[10px] font-semibold px-2 mb-2.5 uppercase tracking-widest`,
+                { color: colors.textMuted },
+              ]}>
               COMMAND DECK
             </Text>
           )}
@@ -167,60 +197,128 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </View>
 
-        {/* User Profile & Collapse Toggle (No Logout button) */}
+        {/* User Profile & Theme Toggle & Collapse Toggle */}
         <View>
-          <View style={tw`h-px bg-slate-800/80 my-3`} />
-          <View style={tw`flex-row items-center px-1.5 py-1 mb-2 bg-slate-900/90 border border-slate-800/80 rounded-2xl`}>
-            <View style={tw`w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 items-center justify-center`}>
-              <User size={15} color="#60a5fa" strokeWidth={2} />
+          {/* Theme Toggle in Sidebar */}
+          <ThemeToggle compact={collapsed} style={tw`mb-2.5 w-full`} />
+
+          <View style={[tw`h-px my-2`, { backgroundColor: colors.borderColor }]} />
+
+          {/* Profile Badge */}
+          <View
+            style={[
+              tw`flex-row items-center px-1.5 py-1.5 mb-2 border rounded-2xl`,
+              {
+                backgroundColor: colors.bgPanel,
+                borderColor: colors.borderColor,
+              },
+            ]}>
+            <View
+              style={[
+                tw`w-8 h-8 rounded-xl border items-center justify-center`,
+                {
+                  backgroundColor: isDark ? 'rgba(47, 128, 255, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                  borderColor: isDark ? 'rgba(47, 128, 255, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                },
+              ]}>
+              <User size={15} color={colors.brightBlue} strokeWidth={2} />
             </View>
             {!collapsed && (
               <View style={tw`ml-2 flex-1`}>
-                <Text style={tw`text-slate-200 text-xs font-semibold`} numberOfLines={1}>
+                <Text
+                  style={[tw`text-xs font-semibold`, { color: colors.textPrimary }]}
+                  numberOfLines={1}>
                   CGWB Analyst
                 </Text>
-                <Text style={tw`text-blue-400 text-[9px] font-medium tracking-wide uppercase`} numberOfLines={1}>
+                <Text
+                  style={[
+                    tw`text-[9px] font-medium tracking-wide uppercase`,
+                    { color: colors.brightBlue },
+                  ]}
+                  numberOfLines={1}>
                   Ministry of Jal Shakti
                 </Text>
               </View>
             )}
           </View>
 
-          {/* Collapse Button Drawer Tab */}
+          {/* Collapse Button */}
           <Pressable
             onPress={() => setCollapsed((c) => !c)}
-            style={tw`mt-1 flex-row items-center justify-center rounded-xl py-1.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-all`}>
+            style={[
+              tw`mt-1 flex-row items-center justify-center rounded-xl py-1.5 border transition-all`,
+              {
+                backgroundColor: colors.bgPanel,
+                borderColor: colors.borderColor,
+              },
+            ]}>
             {collapsed ? (
-              <ChevronRight size={14} color="#94a3b8" strokeWidth={2} />
+              <ChevronRight size={14} color={colors.textMuted} strokeWidth={2} />
             ) : (
-              <ChevronLeft size={14} color="#94a3b8" strokeWidth={2} />
+              <ChevronLeft size={14} color={colors.textMuted} strokeWidth={2} />
             )}
           </Pressable>
         </View>
       </View>
 
       {/* Main Content Workspace Container Frame */}
-      <View style={tw`flex-1 p-3.5 bg-[#eef2f8] overflow-hidden`}>
-        <View style={tw`flex-1 bg-white rounded-[24px] border border-slate-200/90 shadow-sm overflow-hidden flex-col`}>
+      <View style={[tw`flex-1 p-3.5 overflow-hidden`, { backgroundColor: colors.bgCanvas }]}>
+        <View
+          style={[
+            tw`flex-1 rounded-[24px] border shadow-sm overflow-hidden flex-col`,
+            {
+              backgroundColor: colors.bgPanel,
+              borderColor: colors.borderColor,
+            },
+          ]}>
           {/* Main Top Header */}
           <View
-            style={tw`flex-row items-center justify-between px-7 py-4.5 border-b border-slate-100 bg-white`}>
+            style={[
+              tw`flex-row items-center justify-between px-7 py-4.5 border-b`,
+              {
+                backgroundColor: colors.bgPanel,
+                borderColor: colors.borderColor,
+              },
+            ]}>
             <View style={tw`flex-1 pr-4`}>
-              <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-0.5`}>
+              <Text
+                style={[
+                  tw`text-[10px] font-semibold uppercase tracking-widest mb-0.5`,
+                  { color: colors.brightBlue },
+                ]}>
                 {current.category}
               </Text>
-              <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
+              <Text
+                style={[
+                  tw`text-2xl font-bold tracking-tight`,
+                  { color: colors.textPrimary },
+                ]}>
                 {current.title}
               </Text>
-              <Text style={tw`text-xs text-slate-500 mt-1 max-w-3xl font-normal leading-relaxed`}>
+              <Text
+                style={[
+                  tw`text-xs mt-1 max-w-3xl font-normal leading-relaxed`,
+                  { color: colors.textMuted },
+                ]}>
                 {current.subtitle}
               </Text>
             </View>
 
-            {/* Header Badges */}
-            <View style={tw`flex-row items-center`}>
-              <View style={tw`bg-blue-50 border border-blue-200/80 rounded-full px-3.5 py-1.5`}>
-                <Text style={tw`text-[10px] font-semibold text-blue-700 uppercase tracking-wider`}>
+            {/* Header Right Actions */}
+            <View style={tw`flex-row items-center gap-2.5`}>
+              <View
+                style={[
+                  tw`rounded-full px-3.5 py-1.5 border`,
+                  {
+                    backgroundColor: isDark ? 'rgba(47, 128, 255, 0.1)' : 'rgba(37, 99, 235, 0.08)',
+                    borderColor: colors.borderColor,
+                  },
+                ]}>
+                <Text
+                  style={[
+                    tw`text-[10px] font-semibold uppercase tracking-wider`,
+                    { color: colors.brightBlue },
+                  ]}>
                   MULTI-VIEW ENABLED
                 </Text>
               </View>
@@ -228,7 +326,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </View>
 
           {/* Child View Workspace */}
-          <View style={tw`flex-1 bg-slate-50/50`}>{children}</View>
+          <View style={[tw`flex-1`, { backgroundColor: colors.bgCanvas }]}>{children}</View>
         </View>
       </View>
     </View>

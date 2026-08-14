@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { Droplet, MessageCircle, Send, X } from '@/components/Icons';
+import { useTheme } from '@/constants/ThemeContext';
 import { API } from '@/constants/api';
 import tw from '@/constants/tailwind';
 
@@ -29,6 +30,7 @@ const SUGGESTIONS = [
 ];
 
 export default function ChatBot() {
+  const { colors, isDark } = useTheme();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -139,13 +141,13 @@ export default function ChatBot() {
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: '#2563eb',
+            backgroundColor: colors.primaryBlue,
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#2563eb',
+            shadowColor: colors.primaryBlue,
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.4,
-            shadowRadius: 12,
+            shadowOpacity: 0.45,
+            shadowRadius: 14,
             elevation: 8,
           }}>
           <MessageCircle size={26} color="#fff" />
@@ -167,12 +169,15 @@ export default function ChatBot() {
           height: 520,
           maxHeight: '80%',
           zIndex: 9999,
-          borderRadius: 16,
+          borderRadius: 18,
           overflow: 'hidden',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
-          shadowRadius: 24,
+          backgroundColor: colors.cardBg,
+          borderWidth: 1,
+          borderColor: colors.borderColor,
+          shadowColor: isDark ? '#07111F' : '#0F172A',
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: isDark ? 0.5 : 0.15,
+          shadowRadius: 28,
           elevation: 12,
           opacity: panelOpacity,
           transform: [{ translateY: panelTranslateY }],
@@ -189,9 +194,9 @@ export default function ChatBot() {
             justifyContent: 'space-between',
             paddingHorizontal: 16,
             paddingVertical: 14,
-            backgroundColor: '#070d1e',
+            backgroundColor: colors.bgSubtle,
             borderBottomWidth: 1,
-            borderBottomColor: '#1e293b',
+            borderBottomColor: colors.borderColor,
           }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View
@@ -199,7 +204,7 @@ export default function ChatBot() {
                 width: 32,
                 height: 32,
                 borderRadius: 10,
-                backgroundColor: '#2563eb',
+                backgroundColor: colors.primaryBlue,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 10,
@@ -207,23 +212,23 @@ export default function ChatBot() {
               <Droplet size={18} color="#fff" />
             </View>
             <View>
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>
+              <Text style={{ color: colors.textPrimary, fontWeight: '700', fontSize: 14 }}>
                 JalDrishti AI
               </Text>
-              <Text style={{ color: '#94a3b8', fontSize: 10 }}>
+              <Text style={{ color: colors.textMuted, fontSize: 10 }}>
                 Groundwater intelligence assistant
               </Text>
             </View>
           </View>
           <Pressable onPress={closePanel} hitSlop={12}>
-            <X size={22} color="#94a3b8" />
+            <X size={20} color={colors.textMuted} />
           </Pressable>
         </View>
 
         {/* Messages */}
         <ScrollView
           ref={scrollRef}
-          style={{ flex: 1, backgroundColor: '#f8fafc' }}
+          style={{ flex: 1, backgroundColor: colors.bgCanvas }}
           contentContainerStyle={{ padding: 12, paddingBottom: 8 }}
           onContentSizeChange={() =>
             scrollRef.current?.scrollToEnd({ animated: true })
@@ -235,16 +240,18 @@ export default function ChatBot() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: '#eff6ff',
+                  backgroundColor: colors.bgSubtle,
+                  borderWidth: 1,
+                  borderColor: colors.borderColor,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 12,
                 }}>
-                <Droplet size={24} color="#2563eb" />
+                <Droplet size={24} color={colors.brightBlue} />
               </View>
               <Text
                 style={{
-                  color: '#334155',
+                  color: colors.textPrimary,
                   fontWeight: '600',
                   fontSize: 15,
                   marginBottom: 4,
@@ -253,7 +260,7 @@ export default function ChatBot() {
               </Text>
               <Text
                 style={{
-                  color: '#94a3b8',
+                  color: colors.textMuted,
                   fontSize: 12,
                   textAlign: 'center',
                   paddingHorizontal: 20,
@@ -268,15 +275,15 @@ export default function ChatBot() {
                     key={s}
                     onPress={() => sendMessage(s)}
                     style={{
-                      backgroundColor: '#fff',
+                      backgroundColor: colors.cardBg,
                       borderWidth: 1,
-                      borderColor: '#e2e8f0',
+                      borderColor: colors.borderColor,
                       borderRadius: 10,
                       paddingHorizontal: 12,
                       paddingVertical: 10,
                       marginBottom: 6,
                     }}>
-                    <Text style={{ color: '#334155', fontSize: 13 }}>{s}</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 13 }}>{s}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -303,37 +310,37 @@ export default function ChatBot() {
                       width: 20,
                       height: 20,
                       borderRadius: 6,
-                      backgroundColor: '#2563eb',
+                      backgroundColor: colors.primaryBlue,
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 6,
                     }}>
                     <Droplet size={11} color="#fff" />
                   </View>
-                  <Text style={{ color: '#64748b', fontSize: 11, fontWeight: '600' }}>
+                  <Text style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600' }}>
                     JalDrishti AI
                   </Text>
                 </View>
               )}
               <View
                 style={{
-                  backgroundColor: m.role === 'user' ? '#2563eb' : '#fff',
+                  backgroundColor: m.role === 'user' ? colors.primaryBlue : colors.cardBg,
                   borderRadius: 12,
                   borderTopRightRadius: m.role === 'user' ? 4 : 12,
                   borderTopLeftRadius: m.role === 'assistant' ? 4 : 12,
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   borderWidth: m.role === 'assistant' ? 1 : 0,
-                  borderColor: '#e2e8f0',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.04,
+                  borderColor: colors.borderColor,
+                  shadowColor: isDark ? '#07111F' : '#0F172A',
+                  shadowOpacity: isDark ? 0.2 : 0.08,
                   shadowOffset: { width: 0, height: 1 },
                   shadowRadius: 3,
                   elevation: 1,
                 }}>
                 <Text
                   style={{
-                    color: m.role === 'user' ? '#fff' : '#334155',
+                    color: m.role === 'user' ? '#fff' : colors.textPrimary,
                     fontSize: 13,
                     lineHeight: 20,
                   }}
@@ -350,17 +357,17 @@ export default function ChatBot() {
                 alignSelf: 'flex-start',
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#fff',
+                backgroundColor: colors.cardBg,
                 borderRadius: 12,
                 borderTopLeftRadius: 4,
                 paddingHorizontal: 14,
                 paddingVertical: 10,
                 borderWidth: 1,
-                borderColor: '#e2e8f0',
+                borderColor: colors.borderColor,
                 marginBottom: 8,
               }}>
-              <ActivityIndicator size="small" color="#2563eb" />
-              <Text style={{ color: '#94a3b8', fontSize: 13, marginLeft: 8 }}>
+              <ActivityIndicator size="small" color={colors.brightBlue} />
+              <Text style={{ color: colors.textMuted, fontSize: 13, marginLeft: 8 }}>
                 Thinking…
               </Text>
             </View>
@@ -374,27 +381,28 @@ export default function ChatBot() {
             alignItems: 'center',
             paddingHorizontal: 12,
             paddingVertical: 10,
-            backgroundColor: '#fff',
+            backgroundColor: colors.bgSubtle,
             borderTopWidth: 1,
-            borderTopColor: '#e2e8f0',
+            borderTopColor: colors.borderColor,
           }}>
           <TextInput
             value={input}
             onChangeText={setInput}
             onSubmitEditing={() => sendMessage()}
             placeholder="Ask about groundwater…"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colors.textMuted}
             style={[
               {
                 flex: 1,
-                backgroundColor: '#f1f5f9',
+                backgroundColor: colors.bgInput,
                 borderRadius: 10,
                 paddingHorizontal: 14,
                 paddingVertical: 10,
                 fontSize: 13,
-                color: '#0f172a',
+                color: colors.textPrimary,
                 marginRight: 8,
-                borderWidth: 0,
+                borderWidth: 1,
+                borderColor: colors.borderColor,
               },
               Platform.OS === 'web'
                 ? ({
@@ -415,7 +423,7 @@ export default function ChatBot() {
               height: 38,
               borderRadius: 10,
               backgroundColor:
-                loading || !input.trim() ? '#cbd5e1' : '#2563eb',
+                loading || !input.trim() ? colors.borderColor : colors.primaryBlue,
               alignItems: 'center',
               justifyContent: 'center',
             }}>

@@ -24,6 +24,7 @@ import {
   TrendingDown,
   Wrench,
 } from '@/components/Icons';
+import ThemeToggle from '@/components/ThemeToggle';
 import {
   Card,
   CategoryBar,
@@ -35,6 +36,7 @@ import {
   Stat,
   TrendBadge,
 } from '@/components/Ui';
+import { useTheme } from '@/constants/ThemeContext';
 import { Station, Summary, fmt, useApi } from '@/constants/api';
 import tw from '@/constants/tailwind';
 
@@ -45,43 +47,58 @@ interface TrendPoint {
   stations: number;
 }
 
-const StationRow = ({ s, rank }: { s: Station; rank: number }) => (
-  <Pressable
-    onPress={() => router.push({ pathname: '/(tabs)/analytics', params: { code: s.code } })}
-    style={tw`flex-row items-center py-2.5 px-3 border-b border-slate-100 hover:bg-slate-50 rounded-xl transition-all`}>
-    <View
+const StationRow = ({ s, rank }: { s: Station; rank: number }) => {
+  const { colors, isDark } = useTheme();
+  return (
+    <Pressable
+      onPress={() => router.push({ pathname: '/(tabs)/analytics', params: { code: s.code } })}
       style={[
-        tw`w-6 h-6 rounded-lg items-center justify-center mr-3`,
-        rank <= 3 ? tw`bg-rose-50 border border-rose-200/70` : tw`bg-slate-100`,
+        tw`flex-row items-center py-2.5 px-3 border-b rounded-xl transition-all`,
+        { borderColor: colors.borderColor },
       ]}>
-      <Text
+      <View
         style={[
-          tw`text-xs font-semibold`,
-          rank <= 3 ? tw`text-rose-700` : tw`text-slate-600`,
+          tw`w-6 h-6 rounded-lg items-center justify-center mr-3 border`,
+          rank <= 3
+            ? {
+                backgroundColor: isDark ? 'rgba(248, 113, 113, 0.15)' : 'rgba(239, 68, 68, 0.08)',
+                borderColor: isDark ? 'rgba(248, 113, 113, 0.3)' : 'rgba(239, 68, 68, 0.2)',
+              }
+            : {
+                backgroundColor: colors.bgSubtle,
+                borderColor: colors.borderColor,
+              },
         ]}>
-        #{rank}
-      </Text>
-    </View>
-    <View style={tw`flex-1 pr-3`}>
-      <Text style={tw`text-sm font-semibold text-slate-800`} numberOfLines={1}>
-        {s.name}
-      </Text>
-      <Text style={tw`text-xs text-slate-500 mt-0.5 font-normal`} numberOfLines={1}>
-        {s.district}, {s.state} • <Text style={tw`font-mono text-[10px] text-slate-400`}>{s.code}</Text>
-      </Text>
-    </View>
-    <View style={tw`items-end mr-2`}>
-      <TrendBadge value={s.trend_m_per_year} />
-      <Text style={tw`text-[11px] font-medium text-slate-500 mt-0.5`}>
-        {fmt(s.latest_level_mbgl, 2, ' m bgl')}
-      </Text>
-    </View>
-    <ChevronRight size={14} color="#94a3b8" strokeWidth={2} />
-  </Pressable>
-);
+        <Text
+          style={[
+            tw`text-xs font-semibold`,
+            { color: rank <= 3 ? (isDark ? '#f87171' : '#dc2626') : colors.textMuted },
+          ]}>
+          #{rank}
+        </Text>
+      </View>
+      <View style={tw`flex-1 pr-3`}>
+        <Text style={[tw`text-sm font-semibold`, { color: colors.textPrimary }]} numberOfLines={1}>
+          {s.name}
+        </Text>
+        <Text style={[tw`text-xs mt-0.5 font-normal`, { color: colors.textMuted }]} numberOfLines={1}>
+          {s.district}, {s.state} • <Text style={[tw`font-mono text-[10px]`, { color: colors.textMuted }]}>{s.code}</Text>
+        </Text>
+      </View>
+      <View style={tw`items-end mr-2`}>
+        <TrendBadge value={s.trend_m_per_year} />
+        <Text style={[tw`text-[11px] font-medium mt-0.5`, { color: colors.textMuted }]}>
+          {fmt(s.latest_level_mbgl, 2, ' m bgl')}
+        </Text>
+      </View>
+      <ChevronRight size={14} color={colors.textMuted} strokeWidth={2} />
+    </Pressable>
+  );
+};
 
 export default function DashboardScreen() {
   const wide = useWideLayout();
+  const { colors, isDark } = useTheme();
   // Read here rather than beside chartWidth below: that sits after the early
   // returns, and a hook cannot run conditionally.
   const { width } = useWindowDimensions();
@@ -97,7 +114,7 @@ export default function DashboardScreen() {
       datasets: [
         {
           data: rows.map((r) => r.anomaly_m),
-          color: (o = 1) => `rgba(37, 99, 235, ${o})`,
+          color: (o = 1) => `rgba(47, 128, 255, ${o})`,
           strokeWidth: 2.2,
         },
       ],
@@ -107,7 +124,7 @@ export default function DashboardScreen() {
   if (loading && !data) return <Loading label="Loading national groundwater telemetry…" />;
   if (error && !data)
     return (
-      <SafeAreaView style={tw`flex-1 bg-slate-50 justify-center`}>
+      <SafeAreaView style={[tw`flex-1 justify-center`, { backgroundColor: colors.bgCanvas }]}>
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -121,7 +138,7 @@ export default function DashboardScreen() {
   const statCardStyle = tw`${wide ? 'w-[23.5%]' : 'w-[48%]'} m-1`;
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-slate-50/50`} edges={wide ? [] : ['top']}>
+    <SafeAreaView style={[tw`flex-1`, { backgroundColor: colors.bgCanvas }]} edges={wide ? [] : ['top']}>
       <ScrollView
         contentContainerStyle={tw`${wide ? 'px-7 pt-5' : 'px-4 pt-3'} pb-32`}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} />}>
@@ -129,16 +146,19 @@ export default function DashboardScreen() {
         {/* Mobile Header */}
         {!wide && (
           <View style={tw`mb-3 px-1`}>
-            <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest`}>
-              COMMAND DECK
-            </Text>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text style={[tw`text-[10px] font-semibold uppercase tracking-widest`, { color: colors.brightBlue }]}>
+                COMMAND DECK
+              </Text>
+              <ThemeToggle compact />
+            </View>
             <View style={tw`flex-row items-center justify-between mt-0.5`}>
-              <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
+              <Text style={[tw`text-2xl font-bold tracking-tight`, { color: colors.textPrimary }]}>
                 JalDrishti
               </Text>
               <PulseBadge label="Live Telemetry" />
             </View>
-            <Text style={tw`text-xs font-normal text-slate-500 mt-1`}>
+            <Text style={[tw`text-xs font-normal mt-1`, { color: colors.textMuted }]}>
               National groundwater telemetry &amp; resource evaluation
             </Text>
           </View>
@@ -156,15 +176,21 @@ export default function DashboardScreen() {
             return (
               <View
                 key={chip.label}
-                style={tw`flex-row items-center bg-white border border-slate-200/90 rounded-full px-2.5 py-0.5 mr-2 mb-1 shadow-2xs`}>
-                <Icon size={11} color="#2563eb" strokeWidth={2} style={tw`mr-1.5`} />
-                <Text style={tw`text-[10px] font-semibold text-slate-700`}>{chip.label}</Text>
+                style={[
+                  tw`flex-row items-center border rounded-full px-2.5 py-0.5 mr-2 mb-1 shadow-2xs`,
+                  {
+                    backgroundColor: colors.bgPanel,
+                    borderColor: colors.borderColor,
+                  },
+                ]}>
+                <Icon size={11} color={colors.brightBlue} strokeWidth={2} style={tw`mr-1.5`} />
+                <Text style={[tw`text-[10px] font-semibold`, { color: colors.textPrimary }]}>{chip.label}</Text>
               </View>
             );
           })}
         </View>
 
-        {/* 8 Primary KPI Command Cards (Sleek, Compact 4-Across Grid) */}
+        {/* 8 Primary KPI Command Cards */}
         <View style={tw`flex-row flex-wrap -mx-1`}>
           <Stat
             style={statCardStyle}
@@ -172,7 +198,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_level, 2)}
             unit="m bgl"
             icon={Droplet}
-            tint="#2563eb"
+            tint={colors.primaryBlue}
             hint="Depth below ground"
           />
           <Stat
@@ -181,7 +207,7 @@ export default function DashboardScreen() {
             value={Math.abs(netTrend).toFixed(2)}
             unit="m/yr"
             icon={Activity}
-            tint={rising ? '#10b981' : '#ef4444'}
+            tint={rising ? (isDark ? '#34d399' : '#059669') : (isDark ? '#f87171' : '#dc2626')}
             delta={{ text: rising ? 'recovering' : 'deepening', good: rising }}
             hint="Linear regression fit"
           />
@@ -191,7 +217,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_recharge, 0)}
             unit="mm"
             icon={CloudRain}
-            tint="#4f46e5"
+            tint={colors.brightBlue}
             hint="WTF Method (GEC-2015)"
           />
           <Stat
@@ -200,7 +226,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_fluctuation, 2)}
             unit="m"
             icon={Layers}
-            tint="#1d4ed8"
+            tint={colors.primaryBlue}
             hint="Pre vs Post monsoon"
           />
           <Stat
@@ -209,7 +235,7 @@ export default function DashboardScreen() {
             value={String(s.at_risk)}
             unit={`of ${s.total}`}
             icon={AlertTriangle}
-            tint="#dc2626"
+            tint={isDark ? '#f87171' : '#dc2626'}
             delta={{
               text: `${((s.at_risk / Math.max(s.total, 1)) * 100).toFixed(0)}% at risk`,
               good: false,
@@ -221,7 +247,7 @@ export default function DashboardScreen() {
             value={`${s.declining}`}
             unit={`/ ${s.recovering} up`}
             icon={TrendingDown}
-            tint="#1e40af"
+            tint={colors.brightBlue}
             hint="Stations losing table"
           />
           <Stat
@@ -230,7 +256,7 @@ export default function DashboardScreen() {
             value={fmt(s.avg_quality, 0)}
             unit="/100"
             icon={ShieldCheck}
-            tint="#3b82f6"
+            tint={colors.primaryBlue}
             hint={`${s.flagged_sensors} sensors flagged`}
           />
           <Stat
@@ -239,7 +265,7 @@ export default function DashboardScreen() {
             value={`${(s.readings / 1000).toFixed(0)}k`}
             unit="obs"
             icon={Server}
-            tint="#334155"
+            tint={colors.textMuted}
             hint="Daily observations"
           />
         </View>
@@ -258,13 +284,13 @@ export default function DashboardScreen() {
                 width={chartWidth}
                 height={210}
                 chartConfig={{
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#ffffff',
+                  backgroundGradientFrom: colors.chartBg,
+                  backgroundGradientTo: colors.chartBg,
                   decimalPlaces: 1,
-                  color: (o = 1) => `rgba(37, 99, 235, ${o})`,
-                  labelColor: (o = 1) => `rgba(71, 85, 105, ${o})`,
+                  color: (o = 1) => (isDark ? `rgba(47, 128, 255, ${o})` : `rgba(37, 99, 235, ${o})`),
+                  labelColor: (o = 1) => (isDark ? `rgba(120, 144, 170, ${o})` : `rgba(100, 116, 139, ${o})`),
                   propsForDots: { r: '0' },
-                  propsForBackgroundLines: { stroke: '#f8fafc', strokeDasharray: '' },
+                  propsForBackgroundLines: { stroke: colors.chartGrid, strokeDasharray: '' },
                 }}
                 bezier
                 withDots={false}
@@ -272,16 +298,16 @@ export default function DashboardScreen() {
                 yAxisSuffix="m"
                 style={{ marginLeft: -10 }}
               />
-              <View style={tw`flex-row items-center px-4 mt-1.5 pt-2 border-t border-slate-100`}>
-                <Info size={13} color="#2563eb" strokeWidth={2} style={tw`mr-2`} />
-                <Text style={tw`flex-1 text-[10px] text-slate-500 leading-4 font-normal`}>
+              <View style={[tw`flex-row items-center px-4 mt-1.5 pt-2 border-t`, { borderColor: colors.borderColor }]}>
+                <Info size={13} color={colors.brightBlue} strokeWidth={2} style={tw`mr-2`} />
+                <Text style={[tw`flex-1 text-[10px] leading-4 font-normal`, { color: colors.textMuted }]}>
                   Anomaly is measured in metres relative to station baseline. Upward values reflect water table deepening; downward shifts indicate monsoon replenishment.
                 </Text>
               </View>
             </>
           ) : (
             <View style={tw`py-10 items-center`}>
-              <Text style={tw`text-slate-400 text-xs font-normal`}>
+              <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>
                 {trend.loading ? 'Building national anomaly hydrograph…' : 'No time-series data available'}
               </Text>
             </View>
@@ -299,12 +325,12 @@ export default function DashboardScreen() {
             />
             <Card>
               <CategoryBar counts={s.by_category} />
-              <View style={tw`mt-3 pt-2.5 border-t border-slate-100 flex-row items-center justify-between`}>
-                <Text style={tw`text-xs text-slate-500 font-normal`}>
-                  Total Validated Recorders: <Text style={tw`font-semibold text-slate-900`}>{s.total}</Text>
+              <View style={[tw`mt-3 pt-2.5 border-t flex-row items-center justify-between`, { borderColor: colors.borderColor }]}>
+                <Text style={[tw`text-xs font-normal`, { color: colors.textMuted }]}>
+                  Total Validated Recorders: <Text style={[tw`font-semibold`, { color: colors.textPrimary }]}>{s.total}</Text>
                 </Text>
                 <Pressable onPress={() => router.push('/(tabs)/map')}>
-                  <Text style={tw`text-xs font-semibold text-blue-600`}>View GIS Map →</Text>
+                  <Text style={[tw`text-xs font-semibold`, { color: colors.brightBlue }]}>View GIS Map →</Text>
                 </Pressable>
               </View>
             </Card>
@@ -318,7 +344,7 @@ export default function DashboardScreen() {
               icon={AlertCircle}
               action={
                 <Pressable onPress={() => router.push('/(tabs)/alerts')}>
-                  <Text style={tw`text-xs text-blue-600 font-semibold`}>All Alerts →</Text>
+                  <Text style={[tw`text-xs font-semibold`, { color: colors.brightBlue }]}>All Alerts →</Text>
                 </Pressable>
               }
             />
@@ -338,42 +364,56 @@ export default function DashboardScreen() {
         />
         <GlassCard>
           <View style={tw`flex-row items-start mb-3`}>
-            <View style={tw`w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 items-center justify-center mr-3`}>
-              <Wrench size={16} color="#60a5fa" strokeWidth={2} />
+            <View
+              style={[
+                tw`w-8 h-8 rounded-xl border items-center justify-center mr-3`,
+                {
+                  backgroundColor: isDark ? 'rgba(47, 128, 255, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                  borderColor: isDark ? 'rgba(47, 128, 255, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                },
+              ]}>
+              <Wrench size={16} color={colors.brightBlue} strokeWidth={2} />
             </View>
             <View style={tw`flex-1`}>
-              <Text style={tw`text-sm font-semibold text-white`}>
+              <Text style={[tw`text-sm font-semibold`, { color: colors.textPrimary }]}>
                 Artificial Recharge Priority Allocation
               </Text>
-              <Text style={tw`text-xs text-slate-300 mt-1 leading-5 font-normal`}>
-                <Text style={tw`font-semibold text-blue-400`}>{s.at_risk} monitoring stations</Text> indicate severe groundwater stress (&gt; 0.3 m/yr depletion). Recommend immediate sanction of Check Dams and Percolation Tanks under PMKSY &amp; Jal Jeevan Mission in these identified blocks.
+              <Text style={[tw`text-xs mt-1 leading-5 font-normal`, { color: colors.textMuted }]}>
+                <Text style={[tw`font-semibold`, { color: colors.brightBlue }]}>{s.at_risk} monitoring stations</Text> indicate severe groundwater stress (&gt; 0.3 m/yr depletion). Recommend immediate sanction of Check Dams and Percolation Tanks under PMKSY &amp; Jal Jeevan Mission in these identified blocks.
               </Text>
             </View>
           </View>
 
-          <View style={tw`h-px bg-slate-800 my-2`} />
+          <View style={[tw`h-px my-2`, { backgroundColor: colors.borderColor }]} />
 
           <View style={tw`flex-row items-start mt-2`}>
-            <View style={tw`w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 items-center justify-center mr-3`}>
-              <Cpu size={16} color="#93c5fd" strokeWidth={2} />
+            <View
+              style={[
+                tw`w-8 h-8 rounded-xl border items-center justify-center mr-3`,
+                {
+                  backgroundColor: isDark ? 'rgba(47, 128, 255, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                  borderColor: isDark ? 'rgba(47, 128, 255, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                },
+              ]}>
+              <Cpu size={16} color={colors.brightBlue} strokeWidth={2} />
             </View>
             <View style={tw`flex-1`}>
-              <Text style={tw`text-sm font-semibold text-white`}>
+              <Text style={[tw`text-sm font-semibold`, { color: colors.textPrimary }]}>
                 Automated Sensor Quality Assurance
               </Text>
-              <Text style={tw`text-xs text-slate-300 mt-1 leading-5 font-normal`}>
-                <Text style={tw`font-semibold text-blue-300`}>{s.flagged_sensors} sensors</Text> exhibited stuck telemetry (flatline), implausible spikes, or transmission gaps. Automatically isolated from national baseline computations to safeguard policy integrity.
+              <Text style={[tw`text-xs mt-1 leading-5 font-normal`, { color: colors.textMuted }]}>
+                <Text style={[tw`font-semibold`, { color: colors.brightBlue }]}>{s.flagged_sensors} sensors</Text> exhibited stuck telemetry (flatline), implausible spikes, or transmission gaps. Automatically isolated from national baseline computations to safeguard policy integrity.
               </Text>
             </View>
           </View>
         </GlassCard>
 
         {/* Footer */}
-        <View style={tw`mt-6 pt-3 border-t border-slate-200 items-center`}>
-          <Text style={tw`text-xs font-semibold text-slate-700`}>
+        <View style={[tw`mt-6 pt-3 border-t items-center`, { borderColor: colors.borderColor }]}>
+          <Text style={[tw`text-xs font-semibold`, { color: colors.textMuted }]}>
             JalDrishti • Ministry of Jal Shakti • Central Ground Water Board
           </Text>
-          <Text style={tw`text-[10px] text-slate-400 mt-0.5 font-normal`}>
+          <Text style={[tw`text-[10px] mt-0.5 font-normal`, { color: colors.textMuted }]}>
             Smart India Hackathon 2024 (SIH25068) • National Telemetry Evaluation Engine
           </Text>
         </View>
