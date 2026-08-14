@@ -177,10 +177,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {!collapsed && (
               <View style={tw`ml-2 flex-1`}>
                 <Text style={tw`text-slate-200 text-xs font-semibold`} numberOfLines={1}>
-                  Soham Pal
+                  CGWB Analyst
                 </Text>
-                <Text style={tw`text-sky-400 text-[10px] font-medium tracking-wider uppercase`}>
-                  OPERATOR
+                <Text style={tw`text-sky-400 text-[9px] font-medium tracking-wide uppercase`} numberOfLines={1}>
+                  Ministry of Jal Shakti
                 </Text>
               </View>
             )}
