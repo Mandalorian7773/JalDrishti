@@ -139,10 +139,10 @@ export default function ChatBot() {
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: '#0284c7',
+            backgroundColor: '#2563eb',
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#0284c7',
+            shadowColor: '#2563eb',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.4,
             shadowRadius: 12,
@@ -189,7 +189,7 @@ export default function ChatBot() {
             justifyContent: 'space-between',
             paddingHorizontal: 16,
             paddingVertical: 14,
-            backgroundColor: '#0f172a',
+            backgroundColor: '#070d1e',
             borderBottomWidth: 1,
             borderBottomColor: '#1e293b',
           }}>
@@ -199,7 +199,7 @@ export default function ChatBot() {
                 width: 32,
                 height: 32,
                 borderRadius: 10,
-                backgroundColor: '#0284c7',
+                backgroundColor: '#2563eb',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 10,
@@ -210,8 +210,8 @@ export default function ChatBot() {
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>
                 JalDrishti AI
               </Text>
-              <Text style={{ color: '#64748b', fontSize: 10 }}>
-                Groundwater assistant
+              <Text style={{ color: '#94a3b8', fontSize: 10 }}>
+                Groundwater intelligence assistant
               </Text>
             </View>
           </View>
@@ -235,12 +235,12 @@ export default function ChatBot() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: '#e0f2fe',
+                  backgroundColor: '#eff6ff',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 12,
                 }}>
-                <Droplet size={24} color="#0284c7" />
+                <Droplet size={24} color="#2563eb" />
               </View>
               <Text
                 style={{
@@ -303,7 +303,7 @@ export default function ChatBot() {
                       width: 20,
                       height: 20,
                       borderRadius: 6,
-                      backgroundColor: '#0284c7',
+                      backgroundColor: '#2563eb',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 6,
@@ -317,7 +317,7 @@ export default function ChatBot() {
               )}
               <View
                 style={{
-                  backgroundColor: m.role === 'user' ? '#0284c7' : '#fff',
+                  backgroundColor: m.role === 'user' ? '#2563eb' : '#fff',
                   borderRadius: 12,
                   borderTopRightRadius: m.role === 'user' ? 4 : 12,
                   borderTopLeftRadius: m.role === 'assistant' ? 4 : 12,
@@ -359,7 +359,7 @@ export default function ChatBot() {
                 borderColor: '#e2e8f0',
                 marginBottom: 8,
               }}>
-              <ActivityIndicator size="small" color="#0284c7" />
+              <ActivityIndicator size="small" color="#2563eb" />
               <Text style={{ color: '#94a3b8', fontSize: 13, marginLeft: 8 }}>
                 Thinking…
               </Text>
@@ -384,16 +384,26 @@ export default function ChatBot() {
             onSubmitEditing={() => sendMessage()}
             placeholder="Ask about groundwater…"
             placeholderTextColor="#94a3b8"
-            style={{
-              flex: 1,
-              backgroundColor: '#f1f5f9',
-              borderRadius: 10,
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              fontSize: 13,
-              color: '#0f172a',
-              marginRight: 8,
-            }}
+            style={[
+              {
+                flex: 1,
+                backgroundColor: '#f1f5f9',
+                borderRadius: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                fontSize: 13,
+                color: '#0f172a',
+                marginRight: 8,
+                borderWidth: 0,
+              },
+              Platform.OS === 'web'
+                ? ({
+                    outlineStyle: 'none',
+                    outline: 'none',
+                    border: 'none',
+                  } as any)
+                : {},
+            ]}
             editable={!loading}
             returnKeyType="send"
           />
@@ -405,7 +415,7 @@ export default function ChatBot() {
               height: 38,
               borderRadius: 10,
               backgroundColor:
-                loading || !input.trim() ? '#cbd5e1' : '#0284c7',
+                loading || !input.trim() ? '#cbd5e1' : '#2563eb',
               alignItems: 'center',
               justifyContent: 'center',
             }}>

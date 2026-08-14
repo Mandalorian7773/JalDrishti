@@ -86,20 +86,20 @@ const NavItem = ({
       style={[
         tw`flex-row items-center rounded-xl px-3 py-2.5 mb-1.5 transition-all`,
         active
-          ? tw`bg-sky-500/15 border border-sky-400/30 shadow-xs`
-          : tw`hover:bg-slate-800/60 border border-transparent`,
+          ? tw`bg-blue-600/15 border border-blue-500/35 shadow-2xs`
+          : tw`hover:bg-slate-800/50 border border-transparent`,
         collapsed ? tw`justify-center px-0` : tw``,
       ]}>
       <Icon
         size={17}
-        color={active ? '#38bdf8' : '#94a3b8'}
+        color={active ? '#60a5fa' : '#94a3b8'}
         strokeWidth={active ? 2.2 : 1.75}
       />
       {!collapsed && (
         <Text
           style={[
             tw`ml-3 text-xs font-semibold tracking-wide`,
-            active ? tw`text-sky-300` : tw`text-slate-300`,
+            active ? tw`text-blue-300` : tw`text-slate-300`,
           ]}
           numberOfLines={1}>
           {item.label}
@@ -120,17 +120,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     NAV.find((n) => n.route !== '/' && pathname.startsWith(n.route)) ?? NAV[0];
 
   return (
-    <View style={tw`flex-1 flex-row bg-[#0b1329]`}>
-      {/* Distinct Contrasting Sidebar Navigation */}
+    <View style={tw`flex-1 flex-row bg-[#070d1e]`}>
+      {/* Deep Midnight Sapphire Sidebar Navigation */}
       <View
         style={[
-          tw`bg-[#0b1329] px-3.5 py-5 justify-between border-r border-slate-800/80 relative shadow-lg`,
+          tw`bg-[#070d1e] px-3.5 py-5 justify-between border-r border-slate-800/80 relative shadow-lg`,
           { width: collapsed ? COLLAPSED : EXPANDED },
         ]}>
         <View>
           {/* Logo & Brand Header */}
           <View style={tw`flex-row items-center px-1 mb-6`}>
-            <View style={tw`w-9 h-9 rounded-xl bg-sky-500 items-center justify-center shadow-md shadow-sky-500/30`}>
+            <View style={tw`w-9 h-9 rounded-xl bg-blue-600 items-center justify-center shadow-md shadow-blue-600/30`}>
               <Droplets size={19} color="#fff" strokeWidth={2} />
             </View>
             {!collapsed && (
@@ -138,7 +138,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Text style={tw`text-white font-bold text-sm tracking-tight`}>
                   JALDRISHTI
                 </Text>
-                <Text style={tw`text-sky-400 text-[10px] font-semibold tracking-[0.18em] uppercase -mt-0.5`}>
+                <Text style={tw`text-blue-400 text-[10px] font-semibold tracking-[0.18em] uppercase -mt-0.5`}>
                   INTELLIGENCE
                 </Text>
               </View>
@@ -170,16 +170,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* User Profile & Collapse Toggle (No Logout button) */}
         <View>
           <View style={tw`h-px bg-slate-800/80 my-3`} />
-          <View style={tw`flex-row items-center px-1.5 py-1 mb-2 bg-slate-900/80 border border-slate-800/80 rounded-2xl`}>
-            <View style={tw`w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/30 items-center justify-center`}>
-              <User size={15} color="#38bdf8" strokeWidth={2} />
+          <View style={tw`flex-row items-center px-1.5 py-1 mb-2 bg-slate-900/90 border border-slate-800/80 rounded-2xl`}>
+            <View style={tw`w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 items-center justify-center`}>
+              <User size={15} color="#60a5fa" strokeWidth={2} />
             </View>
             {!collapsed && (
               <View style={tw`ml-2 flex-1`}>
                 <Text style={tw`text-slate-200 text-xs font-semibold`} numberOfLines={1}>
                   CGWB Analyst
                 </Text>
-                <Text style={tw`text-sky-400 text-[9px] font-medium tracking-wide uppercase`} numberOfLines={1}>
+                <Text style={tw`text-blue-400 text-[9px] font-medium tracking-wide uppercase`} numberOfLines={1}>
                   Ministry of Jal Shakti
                 </Text>
               </View>
@@ -189,7 +189,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Collapse Button Drawer Tab */}
           <Pressable
             onPress={() => setCollapsed((c) => !c)}
-            style={tw`mt-1 flex-row items-center justify-center rounded-xl py-1.5 bg-slate-850 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-all`}>
+            style={tw`mt-1 flex-row items-center justify-center rounded-xl py-1.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 transition-all`}>
             {collapsed ? (
               <ChevronRight size={14} color="#94a3b8" strokeWidth={2} />
             ) : (
@@ -200,13 +200,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </View>
 
       {/* Main Content Workspace Container Frame */}
-      <View style={tw`flex-1 p-3.5 bg-[#f1f3f6] overflow-hidden`}>
+      <View style={tw`flex-1 p-3.5 bg-[#eef2f8] overflow-hidden`}>
         <View style={tw`flex-1 bg-white rounded-[24px] border border-slate-200/90 shadow-sm overflow-hidden flex-col`}>
           {/* Main Top Header */}
           <View
             style={tw`flex-row items-center justify-between px-7 py-4.5 border-b border-slate-100 bg-white`}>
             <View style={tw`flex-1 pr-4`}>
-              <Text style={tw`text-[10px] font-semibold text-sky-600 uppercase tracking-widest mb-0.5`}>
+              <Text style={tw`text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-0.5`}>
                 {current.category}
               </Text>
               <Text style={tw`text-2xl font-bold text-slate-900 tracking-tight`}>
@@ -219,16 +219,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Header Badges */}
             <View style={tw`flex-row items-center`}>
-              <View style={tw`bg-sky-50 border border-sky-200/90 rounded-full px-3 py-1 mr-2.5`}>
-                <Text style={tw`text-[10px] font-semibold text-sky-700 uppercase tracking-wider`}>
+              <View style={tw`bg-blue-50 border border-blue-200/80 rounded-full px-3.5 py-1.5`}>
+                <Text style={tw`text-[10px] font-semibold text-blue-700 uppercase tracking-wider`}>
                   MULTI-VIEW ENABLED
-                </Text>
-              </View>
-
-              <View style={tw`flex-row items-center bg-white border border-slate-200/90 rounded-full px-3 py-1 shadow-2xs`}>
-                <View style={tw`w-2 h-2 rounded-full bg-sky-500 mr-2`} />
-                <Text style={tw`text-[10px] text-slate-700 font-semibold uppercase tracking-wider`}>
-                  LIVE ENGINE ACTIVE
                 </Text>
               </View>
             </View>

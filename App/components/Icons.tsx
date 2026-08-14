@@ -107,6 +107,18 @@ export const ChevronLeft = ({ size = 20, color = '#64748b', strokeWidth = 2, sty
   </Svg>
 );
 
+export const ChevronDown = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <Path d="m6 9 6 6 6-6" />
+  </Svg>
+);
+
+export const Filter = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <Polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </Svg>
+);
+
 export const ArrowRight = ({ size = 20, color = '#64748b', strokeWidth = 2, style }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style}>
     <Path d="M5 12h14" />
